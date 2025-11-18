@@ -2,18 +2,19 @@
 //  AppDelegate.swift
 //  ReadAndRoad
 //
-//  Created by Weiqing Gao on 11/15/25.
+//  Created by Weiqing Gao on 11/10/25.
 //
 
 import UIKit
+import FirebaseCore
 
-@main
+@UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
-
-
-    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+    func application(_ application: UIApplication,
+                     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        FirebaseApp.configure()
+        print("Firebase initialized successfully.")
         return true
     }
 
