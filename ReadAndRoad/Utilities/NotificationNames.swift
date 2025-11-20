@@ -8,5 +8,7 @@
 import Foundation
 
 extension Notification.Name {
-
+    static let userLoggedIn = Notification.Name("userLoggedIn")
+    static let userRegistered = Notification.Name("userRegistered")
+    static let authFailed = Notification.Name("authFailed")
 }
