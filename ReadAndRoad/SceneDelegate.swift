@@ -11,7 +11,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     var window: UIWindow?
 
-
     func scene(_ scene: UIScene,
                willConnectTo session: UISceneSession,
                options connectionOptions: UIScene.ConnectionOptions) {
@@ -19,9 +18,10 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = (scene as? UIWindowScene) else { return }
         window = UIWindow(windowScene: windowScene)
 
-        //  使用 MainTabBarController 作为根控制器
-        let tabBarController = MainTabBarController()
-        window?.rootViewController = tabBarController
+        let rootVC = ViewController()
+        let nav = UINavigationController(rootViewController: rootVC)
+
+        window?.rootViewController = nav
         window?.makeKeyAndVisible()
     }
 
