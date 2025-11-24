@@ -30,9 +30,7 @@ class ViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "Community"
-
-        // 🔥 在拆分前，这两句就在这里
+        
         communityScreen.tableViewPosts.dataSource = self
         communityScreen.tableViewPosts.delegate = self
 
@@ -43,6 +41,22 @@ class ViewController: UIViewController {
         navigationItem.searchController = searchController
         navigationItem.hidesSearchBarWhenScrolling = false
         navigationItem.largeTitleDisplayMode = .always
+        
+        navigationItem.title = nil
+        // 永远使用标准外观，防止导航栏变厚
+        if let navBar = navigationController?.navigationBar {
+            let appearance = UINavigationBarAppearance()
+            appearance.configureWithOpaqueBackground()
+            appearance.backgroundColor = .white
+            
+            navBar.standardAppearance = appearance
+            navBar.compactAppearance = appearance
+            navBar.scrollEdgeAppearance = appearance
+        }
+
+        // 使用 searchController
+        navigationItem.searchController = searchController
+        navigationItem.hidesSearchBarWhenScrolling = false
 
         loadCommunityPosts()
     }

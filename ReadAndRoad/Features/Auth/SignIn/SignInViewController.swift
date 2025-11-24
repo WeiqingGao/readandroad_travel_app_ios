@@ -37,6 +37,13 @@ class SignInViewController: UIViewController {
         )
     }
     
+    // Add navigation bar
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(false, animated: true)
+        title = "Sign In"
+    }
+    
     @objc func onSignInTapped() {
         let email = signInScreen.textFieldEmail.text ?? ""
         let password = signInScreen.textFieldPassword.text ?? ""
