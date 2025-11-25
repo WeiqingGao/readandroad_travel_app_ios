@@ -73,7 +73,7 @@ class RegisterViewController: UIViewController {
     }
     
     @objc func onRegisterSuccess(notification: Notification) {
-        navigationController?.pushViewController(ViewController(), animated: true)
+        navigationController?.popViewController(animated: true)
     }
     
     @objc func onRegisterError(notification: Notification) {

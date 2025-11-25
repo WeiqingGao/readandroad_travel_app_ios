@@ -67,7 +67,7 @@ class SignInViewController: UIViewController {
     }
     
     @objc func onLoginSuccess(notification: Notification) {
-        navigationController?.pushViewController(ViewController(), animated: true)
+        navigationController?.popViewController(animated: true)
     }
     
     @objc func onLoginError(notification: Notification) {
