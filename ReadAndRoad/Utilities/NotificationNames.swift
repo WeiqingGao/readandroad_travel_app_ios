@@ -11,4 +11,5 @@ extension Notification.Name {
     static let userLoggedIn = Notification.Name("userLoggedIn")
     static let userRegistered = Notification.Name("userRegistered")
     static let authFailed = Notification.Name("authFailed")
+    static let userSignedOut = Notification.Name("userSignedOut")
 }

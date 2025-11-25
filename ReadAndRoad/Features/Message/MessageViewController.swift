@@ -24,14 +24,20 @@ class MessageViewController: UIViewController {
         
         messageView.isLoggedIn = isLoggedIn
         
+        messageView.buttonSignIn.addTarget(self, action: #selector(didTapSignIn), for: .touchUpInside)
+        messageView.buttonFavorites.addTarget(self, action: #selector(didTapFavorites), for: .touchUpInside)
+        messageView.buttonComments.addTarget(self, action: #selector(didTapComments), for: .touchUpInside)
+        
+        // 监听登录与登出通知
         NotificationCenter.default.addObserver(self,
             selector: #selector(userDidLogin),
             name: .userLoggedIn,
             object: nil)
         
-        messageView.buttonSignIn.addTarget(self, action: #selector(didTapSignIn), for: .touchUpInside)
-        messageView.buttonFavorites.addTarget(self, action: #selector(didTapFavorites), for: .touchUpInside)
-        messageView.buttonComments.addTarget(self, action: #selector(didTapComments), for: .touchUpInside)
+        NotificationCenter.default.addObserver(self,
+            selector: #selector(userDidSignOut),
+            name: .userSignedOut,
+            object: nil)
         
         loadMessagesIfNeeded()
     }
@@ -46,6 +52,21 @@ class MessageViewController: UIViewController {
             ("Carol", "Let's go hiking next week."),
             ("David", "I saved your Iceland trip post!")
         ]
+    }
+    
+    // MARK: - 登录状态变化响应
+    @objc func userDidLogin() {
+        messageView.isLoggedIn = true
+        loadMessagesIfNeeded()
+    }
+
+    @objc func userDidSignOut() {
+        messageView.isLoggedIn = false
+        messageView.chats.removeAll()
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
     
     // MARK: - Actions
@@ -68,15 +89,6 @@ class MessageViewController: UIViewController {
                                       preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
-    }
-    
-    @objc func userDidLogin() {
-        messageView.isLoggedIn = true
-        loadMessagesIfNeeded()
-    }
-
-    deinit {
-        NotificationCenter.default.removeObserver(self)
     }
 
 }

@@ -8,27 +8,30 @@
 import UIKit
 
 class ProfileView: UIView, UITableViewDelegate, UITableViewDataSource {
-    
-    // MARK: - UI Components
+
+    // MARK: - 未登录视图
+    var labelSignInPrompt: UILabel!
+    var buttonSignIn: UIButton!
+
+    // MARK: - 登录状态视图
     var imageViewAvatar: UIImageView!
     var textFieldNickname: UITextField!
     var labelEmail: UILabel!
     var buttonChangePassword: UIButton!
+    var buttonSave: UIButton!
     var segmentedControl: UISegmentedControl!
     var tableViewPosts: UITableView!
-    var buttonSave: UIButton!
-    
-    // MARK: - 控制显示
+
+    // MARK: - 状态变量
     var isLoggedIn: Bool = false {
-        didSet {
-            updateLoginStateUI()
-        }
+        didSet { updateLayoutForLoginState() }
     }
 
-    // 头像点击回调（由 Controller 设置）
+    // MARK: - 回调
+    var onSignInTapped: (() -> Void)?
     var onAvatarTapped: (() -> Void)?
-    
-    // 模拟数据
+
+    // 模拟帖子
     var posts: [(id: String, title: String, author: String, date: String, isSaved: Bool)] = [] {
         didSet {
             DispatchQueue.main.async {
@@ -37,60 +40,44 @@ class ProfileView: UIView, UITableViewDelegate, UITableViewDataSource {
         }
     }
 
-    // MARK: - Init
+    // MARK: - 初始化
     override init(frame: CGRect) {
         super.init(frame: frame)
         backgroundColor = .systemBackground
-        
-        addSubview(loginPromptLabel)
-        addSubview(loginButton)
-        
-        setupTopSection()
-        setupSegmentSection()
-        setupTableView()
+        setupSubviews()
         setupConstraints()
-
-        loginPromptLabel.translatesAutoresizingMaskIntoConstraints = false
-        loginButton.translatesAutoresizingMaskIntoConstraints = false
-
-        loginButton.addTarget(self, action: #selector(didTapSignIn), for: .touchUpInside)
+        updateLayoutForLoginState()
     }
-    
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
-    // 未登录时显示的提示视图
-    private let loginPromptLabel: UILabel = {
-        let label = UILabel()
-        label.text = "Sign In to see your information"
-        label.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
-        label.textAlignment = .center
-        label.isHidden = true
-        return label
-    }()
 
-    private let loginButton: UIButton = {
-        let btn = UIButton(type: .system)
-        btn.setTitle("Sign In", for: .normal)
-        btn.titleLabel?.font = UIFont.systemFont(ofSize: 17, weight: .bold)
-        btn.isHidden = true
-        return btn
-    }()
+    // MARK: - 视图设置
+    func setupSubviews() {
+        // 未登录状态
+        labelSignInPrompt = UILabel()
+        labelSignInPrompt.text = "Sign in to see your information"
+        labelSignInPrompt.textAlignment = .center
+        labelSignInPrompt.font = .systemFont(ofSize: 18, weight: .semibold)
+        labelSignInPrompt.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(labelSignInPrompt)
 
-    // 登录按钮点击回调
-    var onSignInTapped: (() -> Void)?
-    
-    // MARK: - Top Section
-    func setupTopSection() {
+        buttonSignIn = UIButton(type: .system)
+        buttonSignIn.setTitle("Sign In", for: .normal)
+        buttonSignIn.titleLabel?.font = .systemFont(ofSize: 18, weight: .medium)
+        buttonSignIn.translatesAutoresizingMaskIntoConstraints = false
+        buttonSignIn.addTarget(self, action: #selector(didTapSignIn), for: .touchUpInside)
+        addSubview(buttonSignIn)
+
+        // 登录状态
         imageViewAvatar = UIImageView(image: UIImage(systemName: "person.circle"))
         imageViewAvatar.tintColor = .systemGray
         imageViewAvatar.contentMode = .scaleAspectFit
-        imageViewAvatar.isUserInteractionEnabled = true // ✅ 开启点击
+        imageViewAvatar.isUserInteractionEnabled = true
         imageViewAvatar.translatesAutoresizingMaskIntoConstraints = false
         addSubview(imageViewAvatar)
 
-        // 添加手势
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(didTapAvatar))
         imageViewAvatar.addGestureRecognizer(tapGesture)
 
@@ -118,22 +105,12 @@ class ProfileView: UIView, UITableViewDelegate, UITableViewDataSource {
         buttonSave.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .semibold)
         buttonSave.translatesAutoresizingMaskIntoConstraints = false
         addSubview(buttonSave)
-    }
-    
-    @objc private func didTapAvatar() {
-        onAvatarTapped?()
-    }
-    
-    // MARK: - Segment Section
-    func setupSegmentSection() {
+
         segmentedControl = UISegmentedControl(items: ["My Posts", "Saved Posts"])
         segmentedControl.selectedSegmentIndex = 0
         segmentedControl.translatesAutoresizingMaskIntoConstraints = false
         addSubview(segmentedControl)
-    }
-    
-    // MARK: - TableView Section
-    func setupTableView() {
+
         tableViewPosts = UITableView()
         tableViewPosts.register(CommunityPostCell.self, forCellReuseIdentifier: "ProfilePostCell")
         tableViewPosts.delegate = self
@@ -141,81 +118,74 @@ class ProfileView: UIView, UITableViewDelegate, UITableViewDataSource {
         tableViewPosts.translatesAutoresizingMaskIntoConstraints = false
         addSubview(tableViewPosts)
     }
-    
-    func updateLoginStateUI() {
-        let shouldHideUserInfo = !isLoggedIn
 
-        imageViewAvatar.isHidden = shouldHideUserInfo
-        textFieldNickname.isHidden = shouldHideUserInfo
-        labelEmail.isHidden = shouldHideUserInfo
-        buttonChangePassword.isHidden = shouldHideUserInfo
-        buttonSave.isHidden = shouldHideUserInfo
+    func setupConstraints() {
+        NSLayoutConstraint.activate([
+            // 未登录
+            labelSignInPrompt.centerXAnchor.constraint(equalTo: centerXAnchor),
+            labelSignInPrompt.centerYAnchor.constraint(equalTo: centerYAnchor, constant: -20),
 
-        loginPromptLabel.isHidden = isLoggedIn
-        loginButton.isHidden = isLoggedIn
+            buttonSignIn.centerXAnchor.constraint(equalTo: centerXAnchor),
+            buttonSignIn.topAnchor.constraint(equalTo: labelSignInPrompt.bottomAnchor, constant: 16),
 
-        tableViewPosts.reloadData()
+            // 登录状态
+            imageViewAvatar.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor, constant: 10),
+            imageViewAvatar.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 20),
+            imageViewAvatar.widthAnchor.constraint(equalTo: widthAnchor, multiplier: 0.22),
+            imageViewAvatar.heightAnchor.constraint(equalTo: widthAnchor, multiplier: 0.22),
+
+            textFieldNickname.topAnchor.constraint(equalTo: imageViewAvatar.topAnchor),
+            textFieldNickname.leadingAnchor.constraint(equalTo: imageViewAvatar.trailingAnchor, constant: 20),
+            textFieldNickname.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -20),
+
+            labelEmail.topAnchor.constraint(equalTo: textFieldNickname.bottomAnchor, constant: 10),
+            labelEmail.leadingAnchor.constraint(equalTo: textFieldNickname.leadingAnchor),
+
+            buttonChangePassword.topAnchor.constraint(equalTo: labelEmail.bottomAnchor, constant: 10),
+            buttonChangePassword.leadingAnchor.constraint(equalTo: textFieldNickname.leadingAnchor),
+
+            buttonSave.topAnchor.constraint(equalTo: buttonChangePassword.bottomAnchor, constant: 10),
+            buttonSave.leadingAnchor.constraint(equalTo: textFieldNickname.leadingAnchor),
+
+            segmentedControl.topAnchor.constraint(equalTo: imageViewAvatar.bottomAnchor, constant: 20),
+            segmentedControl.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 40),
+            segmentedControl.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -40),
+
+            tableViewPosts.topAnchor.constraint(equalTo: segmentedControl.bottomAnchor, constant: 10),
+            tableViewPosts.leadingAnchor.constraint(equalTo: leadingAnchor),
+            tableViewPosts.trailingAnchor.constraint(equalTo: trailingAnchor),
+            tableViewPosts.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor)
+        ])
+    }
+
+    private func updateLayoutForLoginState() {
+        // 未登录时显示提示；登录时显示资料部分
+        labelSignInPrompt.isHidden = isLoggedIn
+        buttonSignIn.isHidden = isLoggedIn
+
+        imageViewAvatar.isHidden = !isLoggedIn
+        textFieldNickname.isHidden = !isLoggedIn
+        labelEmail.isHidden = !isLoggedIn
+        buttonChangePassword.isHidden = !isLoggedIn
+        buttonSave.isHidden = !isLoggedIn
+        segmentedControl.isHidden = !isLoggedIn
+        tableViewPosts.isHidden = !isLoggedIn
     }
 
     @objc private func didTapSignIn() {
         onSignInTapped?()
     }
-    
-    // MARK: - Constraints
-    func setupConstraints() {
-        NSLayoutConstraint.activate([
-            // 顶部1/5
-            imageViewAvatar.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor, constant: 10),
-            imageViewAvatar.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 20),
-            imageViewAvatar.widthAnchor.constraint(equalTo: widthAnchor, multiplier: 0.22),
-            imageViewAvatar.heightAnchor.constraint(equalTo: widthAnchor, multiplier: 0.22),
-            
-            textFieldNickname.topAnchor.constraint(equalTo: imageViewAvatar.topAnchor),
-            textFieldNickname.leadingAnchor.constraint(equalTo: imageViewAvatar.trailingAnchor, constant: 20),
-            textFieldNickname.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -20),
-            
-            labelEmail.topAnchor.constraint(equalTo: textFieldNickname.bottomAnchor, constant: 4),
-            labelEmail.leadingAnchor.constraint(equalTo: textFieldNickname.leadingAnchor),
-            
-            buttonChangePassword.topAnchor.constraint(equalTo: labelEmail.bottomAnchor, constant: 4),
-            buttonChangePassword.leadingAnchor.constraint(equalTo: textFieldNickname.leadingAnchor),
-            
-            buttonSave.topAnchor.constraint(equalTo: buttonChangePassword.bottomAnchor, constant: 4),
-            buttonSave.leadingAnchor.constraint(equalTo: textFieldNickname.leadingAnchor),
-            
-            // 中间切换区
-            segmentedControl.topAnchor.constraint(equalTo: imageViewAvatar.bottomAnchor, constant: 20),
-            segmentedControl.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 40),
-            segmentedControl.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -40),
-            
-            // 表格部分
-            tableViewPosts.topAnchor.constraint(equalTo: segmentedControl.bottomAnchor, constant: 10),
-            tableViewPosts.leadingAnchor.constraint(equalTo: leadingAnchor),
-            tableViewPosts.trailingAnchor.constraint(equalTo: trailingAnchor),
-            tableViewPosts.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor),
-            
-            // 未登录状态视图
-            loginPromptLabel.centerXAnchor.constraint(equalTo: centerXAnchor),
-            loginPromptLabel.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor, constant: 40),
 
-            loginButton.topAnchor.constraint(equalTo: loginPromptLabel.bottomAnchor, constant: 12),
-            loginButton.centerXAnchor.constraint(equalTo: centerXAnchor)
-        ])
+    @objc private func didTapAvatar() {
+        onAvatarTapped?()
     }
-    
-    // MARK: - TableView Delegate
+
+    // MARK: - TableView
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return isLoggedIn ? posts.count : 1
+        return posts.count
     }
-    
+
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        if !isLoggedIn {
-            let cell = UITableViewCell()
-            cell.textLabel?.text = "Sign In to see your posts"
-            cell.textLabel?.textAlignment = .center
-            cell.textLabel?.textColor = .secondaryLabel
-            return cell
-        }
         guard let cell = tableView.dequeueReusableCell(withIdentifier: "ProfilePostCell", for: indexPath) as? CommunityPostCell else {
             return UITableViewCell()
         }
