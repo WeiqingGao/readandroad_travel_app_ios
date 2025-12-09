@@ -10,19 +10,15 @@
 
 import UIKit
 import FirebaseAuth
+import FirebaseFirestore
 
 class ViewController: UIViewController {
 
     let communityScreen = CommunityView()
-
-    // 帖子数据
-    var posts: [(id: String, title: String, author: String, date: String, isSaved: Bool)] = [] {
-        didSet {
-            DispatchQueue.main.async {
-                self.communityScreen.tableViewPosts.reloadData()
-            }
-        }
-    }
+    let db = Firestore.firestore()
+    var posts: [Post] = []
+    
+    var listener: ListenerRegistration?
 
     override func loadView() {
         view = communityScreen
@@ -31,19 +27,16 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        // tableview
         communityScreen.tableViewPosts.dataSource = self
         communityScreen.tableViewPosts.delegate = self
 
-        // 搜索栏设置
-        let searchController = UISearchController(searchResultsController: nil)
-        searchController.searchBar.placeholder = "Search"
-        searchController.obscuresBackgroundDuringPresentation = false
-        navigationItem.searchController = searchController
+        // 搜索栏（只设 placeholder，具体搜索逻辑后面加）
+        communityScreen.searchBarSection.delegate = self
         navigationItem.hidesSearchBarWhenScrolling = false
-        navigationItem.largeTitleDisplayMode = .always
-        
+
         navigationItem.title = nil
-        // 永远使用标准外观，防止导航栏变厚
+        
         if let navBar = navigationController?.navigationBar {
             let appearance = UINavigationBarAppearance()
             appearance.configureWithOpaqueBackground()
@@ -54,24 +47,26 @@ class ViewController: UIViewController {
             navBar.scrollEdgeAppearance = appearance
         }
 
-        // 使用 searchController
-        navigationItem.searchController = searchController
-        navigationItem.hidesSearchBarWhenScrolling = false
-
-        loadCommunityPosts()
+        observePosts()
+    }
+    
+    deinit {
+        listener?.remove()
     }
 
-    func loadCommunityPosts() {
-        let mockPosts = [
-            (UUID().uuidString, "Best spots in Paris", "Alice", "2025-11-16 09:30", false),
-            (UUID().uuidString, "Hidden gems of Kyoto", "Bob", "2025-11-15 17:10", false),
-            (UUID().uuidString, "Backpacking through Iceland", "Carol", "2025-11-14 14:02", false),
-            (UUID().uuidString, "Solo trip to New Zealand", "David", "2025-11-12 20:45", false)
-        ]
+    // MARK: - Firestore
+    func observePosts() {
+        listener = db.collection("Posts")
+            .order(by: "createdAt", descending: true)
+            .addSnapshotListener { [weak self] snapshot, error in
+                guard let self = self, let docs = snapshot?.documents else { return }
 
-        posts = mockPosts.map { (id, t, a, d, s) in
-            (id: id, title: t, author: a, date: d, isSaved: s)
-        }
+                self.posts = docs.map { Post(document: $0) }
+
+                DispatchQueue.main.async {
+                    self.communityScreen.tableViewPosts.reloadData()
+                }
+            }
     }
 }
 
@@ -92,23 +87,45 @@ extension ViewController: UITableViewDataSource, UITableViewDelegate {
         }
 
         let post = posts[indexPath.row]
-        cell.configure(title: post.title,
-                       author: post.author,
-                       date: post.date,
-                       postID: post.id,
-                       isSaved: post.isSaved)
+
+        // 格式化时间
+        let dateString: String
+        if let date = post.createdAt {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy-MM-dd HH:mm"
+            dateString = formatter.string(from: date)
+        } else {
+            dateString = ""
+        }
+
+        // 先用 post.text 作为 title，post.authorName 作为 author，
+        // isSaved 先写死为 false（后面做收藏功能的时候再改）
+        cell.configure(
+            title: post.text,
+            author: post.authorName,
+            date: dateString,
+            postID: post.id,
+            isSaved: false
+        )
+
         return cell
     }
 
     func tableView(_ tableView: UITableView,
                    didSelectRowAt indexPath: IndexPath) {
-
         tableView.deselectRow(at: indexPath, animated: true)
 
         let post = posts[indexPath.row]
         let detailVC = PostDetailViewController()
-        // detailVC.postID = post.id
-        // detailVC.isSaved = post.isSaved
+        // detailVC.post = post   // 以后你定义好 PostDetail 再传递
         navigationController?.pushViewController(detailVC, animated: true)
+    }
+}
+
+// MARK: - UISearchBarDelegate (预留)
+extension ViewController: UISearchBarDelegate {
+
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        // 这里实现搜索逻辑（在内存中过滤 posts，或者改成 query Firestore）。先留空。
     }
 }

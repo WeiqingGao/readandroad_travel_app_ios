@@ -7,6 +7,7 @@
 
 
 import UIKit
+import FirebaseAuth
 import FirebaseFirestore
 import FirebaseStorage
 
@@ -105,43 +106,27 @@ class CreatePostViewController: UIViewController, UITableViewDelegate, UITableVi
 
     // MARK: - Firestore: Create Post
     func createPost(text: String, photoURLs: [String]) {
-        var spotRefs: [DocumentReference] = []
+        guard let uid = Auth.auth().currentUser?.uid else { return }
 
-        let group = DispatchGroup()
+        let postData: [String: Any] = [
+            "authorId": uid,
+            "authorName": Auth.auth().currentUser?.displayName ?? "", // 如果有
+            "text": text,
+            "spots": self.spots.map { ["name": $0.name, "rating": $0.rating] },
+            "photoURLs": photoURLs,
+            "createdAt": FieldValue.serverTimestamp(),
+            "commentsCount": 0
+        ]
 
-        // 确保 Spot 存在（不存在就新建）
-        for spot in spots {
-            group.enter()
-            let ref = db.collection("Spots").document(spot.name)
-
-            ref.getDocument { snapshot, _ in
-                if !(snapshot?.exists ?? false) {
-                    ref.setData([
-                        "name": spot.name,
-                        "createdAt": Timestamp()
-                    ])
-                }
-
-                spotRefs.append(ref)
-                group.leave()
+        db.collection("Posts").addDocument(data: postData) { [weak self] error in
+            if let error = error {
+                print("Error creating post: \(error)")
+                return
             }
-        }
-
-        // Spots 存好后再创建 Post
-        group.notify(queue: .main) {
-            let postData: [String: Any] = [
-                "text": text,
-                "spots": self.spots.map { ["name": $0.name, "rating": $0.rating] },
-                "photoURLs": photoURLs,
-                "createdAt": Timestamp()
-            ]
-
-            self.db.collection("Posts").addDocument(data: postData) { _ in
-                self.navigationController?.popViewController(animated: true)
-            }
+            self?.navigationController?.popViewController(animated: true)
         }
     }
-
+    
     // MARK: - Upload Photos to Firebase Storage
     func uploadPhotos(completion: @escaping ([String]) -> Void) {
         if photos.isEmpty { completion([]); return }
