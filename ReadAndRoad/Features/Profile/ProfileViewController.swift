@@ -53,6 +53,22 @@ class ProfileViewController: UIViewController,
             action: #selector(didTapChangePassword),
             for: .touchUpInside
         )
+        
+        profileScreen.onToggleSave = { [weak self] postID, newStatus in
+            guard let self = self else { return }
+
+            if Auth.auth().currentUser == nil {
+                self.showLoginAlert()
+                return
+            }
+
+            SavedPostManager.shared.setSaved(newStatus, for: postID, completion: nil)
+        }
+        
+        profileScreen.onSelectPost = { [weak self] post in
+            let detailVC = PostDetailViewController(post: post)
+            self?.navigationController?.pushViewController(detailVC, animated: true)
+        }
 
         NotificationCenter.default.addObserver(self,
             selector: #selector(userDidLogin),
@@ -270,6 +286,20 @@ class ProfileViewController: UIViewController,
             // 删除帖子本体
             postRef.delete()
         }
+    }
+    
+    func showLoginAlert() {
+        let alert = UIAlertController(
+            title: "Login Required",
+            message: "You must sign in to save posts.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Sign In", style: .default, handler: { _ in
+            let vc = SignInViewController()
+            self.navigationController?.pushViewController(vc, animated: true)
+        }))
+        present(alert, animated: true)
     }
 
     deinit {

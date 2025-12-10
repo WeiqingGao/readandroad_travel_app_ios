@@ -26,6 +26,8 @@ class ProfileView: UIView, UITableViewDelegate, UITableViewDataSource {
     var isLoggedIn: Bool = false {
         didSet { updateLayoutForLoginState() }
     }
+    var onToggleSave: ((String, Bool) -> Void)?
+    var onSelectPost: ((Post) -> Void)?
     
     // MARK: - 回调
     var onSignInTapped: (() -> Void)?
@@ -185,21 +187,22 @@ class ProfileView: UIView, UITableViewDelegate, UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        
+
         guard let cell = tableView.dequeueReusableCell(
             withIdentifier: "ProfilePostCell",
             for: indexPath
         ) as? CommunityPostCell else {
             return UITableViewCell()
         }
-        
+
         let post = posts[indexPath.row]
-        
+
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd HH:mm"
         let dateString = post.createdAt.map { formatter.string(from: $0) } ?? ""
-        
+
         let isSaved = SavedPostManager.shared.isSaved(post.id)
+
         cell.configure(
             title: post.text,
             author: post.authorName,
@@ -207,7 +210,17 @@ class ProfileView: UIView, UITableViewDelegate, UITableViewDataSource {
             postID: post.id,
             isSaved: isSaved
         )
-        
+
+        // 把 cell 点收藏事件传给 ProfileViewController
+        cell.onToggleSave = { [weak self] postID, newStatus in
+            self?.onToggleSave?(postID, newStatus)
+        }
+
         return cell
+    }
+
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let post = posts[indexPath.row]
+        onSelectPost?(post)
     }
 }
