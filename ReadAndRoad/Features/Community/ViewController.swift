@@ -116,8 +116,8 @@ extension ViewController: UITableViewDataSource, UITableViewDelegate {
         tableView.deselectRow(at: indexPath, animated: true)
 
         let post = posts[indexPath.row]
-        let detailVC = PostDetailViewController()
-        // detailVC.post = post   // 以后你定义好 PostDetail 再传递
+        let detailVC = PostDetailViewController(post: post)
+        // detailVC.post = post   // 定义好 PostDetail 再传递
         navigationController?.pushViewController(detailVC, animated: true)
     }
 }
