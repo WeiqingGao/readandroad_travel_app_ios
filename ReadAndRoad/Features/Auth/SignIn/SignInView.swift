@@ -7,7 +7,11 @@
 
 import UIKit
 
+/// Login screen layout containing email, password, and navigation to sign-up.
 class SignInView: UIView {
+    
+    // MARK: - UI Components
+    
     var labelWelcome: UILabel!
     var labelEmail: UILabel!
     var textFieldEmail: UITextField!
@@ -17,9 +21,12 @@ class SignInView: UIView {
     var buttonSignUp: UIButton!
     var buttonSignIn: UIButton!
     
+    // MARK: - Init
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
         backgroundColor = .white
+        
         setupLabelWelcome()
         setupLabelEmail()
         setupTextFieldEmail()
@@ -28,8 +35,15 @@ class SignInView: UIView {
         setupLabelSignUpReminder()
         setupButtonSignUp()
         setupButtonSignIn()
+        
         initConstraints()
     }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    // MARK: - UI Setup
     
     func setupLabelWelcome() {
         labelWelcome = UILabel()
@@ -89,7 +103,7 @@ class SignInView: UIView {
     func setupButtonSignUp() {
         buttonSignUp = UIButton(type: .system)
         buttonSignUp.setTitle("Create an account", for: .normal)
-        buttonSignUp.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
+        buttonSignUp.titleLabel?.font = .boldSystemFont(ofSize: 14)
         buttonSignUp.tintColor = .systemBlue
         buttonSignUp.translatesAutoresizingMaskIntoConstraints = false
         addSubview(buttonSignUp)
@@ -105,6 +119,8 @@ class SignInView: UIView {
         buttonSignIn.translatesAutoresizingMaskIntoConstraints = false
         addSubview(buttonSignIn)
     }
+    
+    // MARK: - Constraints
     
     func initConstraints() {
         NSLayoutConstraint.activate([
@@ -138,9 +154,4 @@ class SignInView: UIView {
             buttonSignIn.widthAnchor.constraint(equalTo: safeAreaLayoutGuide.widthAnchor, multiplier: 0.6)
         ])
     }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
 }
-
