@@ -9,15 +9,16 @@
 import UIKit
 import FirebaseAuth
 
-/// Cell displaying a community post with title, author, date and a save/star button.
+/// A table view cell displaying a community post.
+/// Includes title, author, date, and a save/star button.
 class CommunityPostCell: UITableViewCell {
 
     // MARK: - UI Components
 
-    private let labelTitle = UILabel()
-    private let labelAuthor = UILabel()
-    private let labelDate = UILabel()
-    private let buttonStar = UIButton(type: .system)
+    var labelTitle: UILabel!
+    var labelAuthor: UILabel!
+    var labelDate: UILabel!
+    var buttonStar: UIButton!
 
     // MARK: - Properties
 
@@ -26,55 +27,73 @@ class CommunityPostCell: UITableViewCell {
         didSet { updateStarAppearance() }
     }
 
-    /// Callback for save toggle: (postID, newStatus)
+    /// Callback triggered when star button is toggled.
     var onToggleSave: ((String, Bool) -> Void)?
 
-    // MARK: - Initializer
+    // MARK: - Init
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
-        setupUI()
-        setupConstraints()
+
+        setupLabelTitle()
+        setupLabelAuthor()
+        setupLabelDate()
+        setupButtonStar()
+
+        initConstraints()
     }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
-    // MARK: - UI Setup
+    // MARK: - Setup UI
 
-    private func setupUI() {
-
+    func setupLabelTitle() {
+        labelTitle = UILabel()
         labelTitle.font = UIFont.boldSystemFont(ofSize: 16)
         labelTitle.numberOfLines = 0
+        labelTitle.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(labelTitle)
+    }
 
+    func setupLabelAuthor() {
+        labelAuthor = UILabel()
         labelAuthor.font = UIFont.systemFont(ofSize: 13)
         labelAuthor.textColor = .gray
+        labelAuthor.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(labelAuthor)
+    }
 
+    func setupLabelDate() {
+        labelDate = UILabel()
         labelDate.font = UIFont.systemFont(ofSize: 12)
         labelDate.textColor = .secondaryLabel
         labelDate.textAlignment = .right
-
-        buttonStar.tintColor = .systemYellow
-        buttonStar.addTarget(self, action: #selector(didTapStar), for: .touchUpInside)
-
-        [labelTitle, labelAuthor, labelDate, buttonStar].forEach {
-            $0.translatesAutoresizingMaskIntoConstraints = false
-            contentView.addSubview($0)
-        }
+        labelDate.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(labelDate)
     }
 
-    // MARK: - Layout
+    func setupButtonStar() {
+        buttonStar = UIButton(type: .system)
+        buttonStar.tintColor = .systemYellow
+        buttonStar.translatesAutoresizingMaskIntoConstraints = false
+        buttonStar.addTarget(self, action: #selector(onStarTapped), for: .touchUpInside)
+        contentView.addSubview(buttonStar)
+    }
 
-    private func setupConstraints() {
+    // MARK: - Constraints
+
+    func initConstraints() {
         NSLayoutConstraint.activate([
+
             // Title
-            labelTitle.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 10),
+            labelTitle.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 12),
             labelTitle.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
             labelTitle.trailingAnchor.constraint(equalTo: buttonStar.leadingAnchor, constant: -12),
 
-            // Star Button
-            buttonStar.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 10),
+            // Star button
+            buttonStar.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 12),
             buttonStar.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
             buttonStar.widthAnchor.constraint(equalToConstant: 26),
             buttonStar.heightAnchor.constraint(equalToConstant: 26),
@@ -83,16 +102,16 @@ class CommunityPostCell: UITableViewCell {
             labelAuthor.topAnchor.constraint(equalTo: labelTitle.bottomAnchor, constant: 6),
             labelAuthor.leadingAnchor.constraint(equalTo: labelTitle.leadingAnchor),
 
-            // Date aligned with author line
+            // Date
             labelDate.centerYAnchor.constraint(equalTo: labelAuthor.centerYAnchor),
             labelDate.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
 
-            // Bottom
-            labelAuthor.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -10)
+            // Bottom Anchor
+            labelAuthor.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -12)
         ])
     }
 
-    // MARK: - Public Configure
+    // MARK: - Configure
 
     func configure(title: String,
                    author: String,
@@ -106,26 +125,23 @@ class CommunityPostCell: UITableViewCell {
 
         self.postID = postID
         self.isSaved = isSaved
-        // didSet will update star appearance
     }
 
-    // MARK: - Star Handling
+    // MARK: - Star Button Handling
 
     private func updateStarAppearance() {
-        let imageName = isSaved ? "star.fill" : "star"
-        buttonStar.setImage(UIImage(systemName: imageName), for: .normal)
+        let iconName = isSaved ? "star.fill" : "star"
+        buttonStar.setImage(UIImage(systemName: iconName), for: .normal)
     }
 
-    @objc private func didTapStar() {
-        guard let postID = postID else { return }
+    @objc private func onStarTapped() {
+        guard let postID else { return }
 
-        // Let VC handle login restriction
         if Auth.auth().currentUser == nil {
             onToggleSave?(postID, isSaved)
             return
         }
 
-        // Toggle instantly for UX
         isSaved.toggle()
         onToggleSave?(postID, isSaved)
     }
