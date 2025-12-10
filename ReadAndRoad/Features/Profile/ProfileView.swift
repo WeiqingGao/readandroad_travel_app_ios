@@ -7,7 +7,7 @@
 
 import UIKit
 
-class ProfileView: UIView, UITableViewDelegate, UITableViewDataSource {
+class ProfileView: UIView {
     
     // MARK: - 未登录视图
     var labelSignInPrompt: UILabel!
@@ -26,8 +26,7 @@ class ProfileView: UIView, UITableViewDelegate, UITableViewDataSource {
     var isLoggedIn: Bool = false {
         didSet { updateLayoutForLoginState() }
     }
-    var onToggleSave: ((String, Bool) -> Void)?
-    var onSelectPost: ((Post) -> Void)?
+
     
     // MARK: - 回调
     var onSignInTapped: (() -> Void)?
@@ -116,8 +115,6 @@ class ProfileView: UIView, UITableViewDelegate, UITableViewDataSource {
         
         tableViewPosts = UITableView()
         tableViewPosts.register(CommunityPostCell.self, forCellReuseIdentifier: "ProfilePostCell")
-        tableViewPosts.delegate = self
-        tableViewPosts.dataSource = self
         tableViewPosts.translatesAutoresizingMaskIntoConstraints = false
         addSubview(tableViewPosts)
     }
@@ -150,7 +147,7 @@ class ProfileView: UIView, UITableViewDelegate, UITableViewDataSource {
             
             buttonChangePassword.topAnchor.constraint(equalTo: labelEmail.bottomAnchor, constant: 10),
             buttonChangePassword.leadingAnchor.constraint(equalTo: textFieldNickname.leadingAnchor),
-                        
+            
             segmentedControl.topAnchor.constraint(equalTo: buttonChangePassword.bottomAnchor, constant: 20),
             segmentedControl.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 40),
             segmentedControl.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -40),
@@ -183,46 +180,4 @@ class ProfileView: UIView, UITableViewDelegate, UITableViewDataSource {
         onAvatarTapped?()
     }
     
-    // MARK: - TableView
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return posts.count
-    }
-    
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-
-        guard let cell = tableView.dequeueReusableCell(
-            withIdentifier: "ProfilePostCell",
-            for: indexPath
-        ) as? CommunityPostCell else {
-            return UITableViewCell()
-        }
-
-        let post = posts[indexPath.row]
-
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd HH:mm"
-        let dateString = post.createdAt.map { formatter.string(from: $0) } ?? ""
-
-        let isSaved = SavedPostManager.shared.isSaved(post.id)
-
-        cell.configure(
-            title: post.text,
-            author: post.authorName,
-            date: dateString,
-            postID: post.id,
-            isSaved: isSaved
-        )
-
-        // 把 cell 点收藏事件传给 ProfileViewController
-        cell.onToggleSave = { [weak self] postID, newStatus in
-            self?.onToggleSave?(postID, newStatus)
-        }
-
-        return cell
-    }
-
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let post = posts[indexPath.row]
-        onSelectPost?(post)
-    }
 }

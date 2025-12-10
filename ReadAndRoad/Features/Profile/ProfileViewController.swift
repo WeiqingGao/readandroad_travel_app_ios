@@ -19,6 +19,9 @@ class ProfileViewController: UIViewController,
 
     var myPostsListener: ListenerRegistration?
     var savedPostsListener: ListenerRegistration?
+    
+    var onToggleSave: ((String, Bool) -> Void)?
+    var onSelectPost: ((Post) -> Void)?
 
     override func loadView() {
         view = profileScreen
@@ -29,6 +32,9 @@ class ProfileViewController: UIViewController,
         title = "Profile"
         view.backgroundColor = .systemBackground
 
+        profileScreen.tableViewPosts.delegate = self
+        profileScreen.tableViewPosts.dataSource = self
+        
         profileScreen.onSignInTapped = { [weak self] in
             let vc = SignInViewController()
             self?.navigationController?.pushViewController(vc, animated: true)
@@ -50,6 +56,7 @@ class ProfileViewController: UIViewController,
         
         profileScreen.textFieldNickname.delegate = self
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(backgroundTapped))
+        tapGesture.cancelsTouchesInView = false 
         view.addGestureRecognizer(tapGesture)
 
         profileScreen.buttonChangePassword.addTarget(
@@ -58,7 +65,7 @@ class ProfileViewController: UIViewController,
             for: .touchUpInside
         )
         
-        profileScreen.onToggleSave = { [weak self] postID, newStatus in
+        onToggleSave = { [weak self] postID, newStatus in
             guard let self = self else { return }
 
             if Auth.auth().currentUser == nil {
@@ -69,9 +76,10 @@ class ProfileViewController: UIViewController,
             SavedPostManager.shared.setSaved(newStatus, for: postID, completion: nil)
         }
         
-        profileScreen.onSelectPost = { [weak self] post in
-            let detailVC = PostDetailViewController(post: post)
-            self?.navigationController?.pushViewController(detailVC, animated: true)
+        onSelectPost = { [weak self] post in
+            let vc = PostDetailViewController(post: post)
+            vc.hidesBottomBarWhenPushed = true
+            self?.navigationController?.pushViewController(vc, animated: true)
         }
 
         NotificationCenter.default.addObserver(self,
@@ -362,27 +370,6 @@ class ProfileViewController: UIViewController,
     }
 }
 
-extension ProfileViewController: UITableViewDelegate {
-
-    // 允许滑动删除
-    func tableView(_ tableView: UITableView,
-                   trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath)
-        -> UISwipeActionsConfiguration? {
-
-        let post = profileScreen.posts[indexPath.row]
-
-        // 不是作者 → 不能删除
-        guard post.authorId == currentUID else { return nil }
-
-        let deleteAction = UIContextualAction(style: .destructive, title: "Delete") { _, _, done in
-            self.confirmDelete(post: post)
-            done(true)
-        }
-
-        return UISwipeActionsConfiguration(actions: [deleteAction])
-    }
-}
-
 extension ProfileViewController: UITextFieldDelegate {
     func textFieldDidBeginEditing(_ textField: UITextField) {
         profileScreen.textFieldNickname.layer.borderWidth = 1
@@ -404,5 +391,72 @@ extension ProfileViewController: UITextFieldDelegate {
         // 🔥 关键：让文字紧贴左侧，和 label 更像
         tf.leftView = nil
         tf.rightView = nil
+    }
+}
+
+extension ProfileViewController: UITableViewDataSource, UITableViewDelegate {
+
+    // MARK: - ROW COUNT
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return profileScreen.posts.count
+    }
+
+    // MARK: - CELL FOR ROW
+    func tableView(_ tableView: UITableView,
+                   cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+
+        guard let cell = tableView.dequeueReusableCell(
+            withIdentifier: "ProfilePostCell",
+            for: indexPath
+        ) as? CommunityPostCell else {
+            return UITableViewCell()
+        }
+
+        let post = profileScreen.posts[indexPath.row]
+
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH:mm"
+        let dateString = post.createdAt.map { formatter.string(from: $0) } ?? ""
+
+        let isSaved = SavedPostManager.shared.isSaved(post.id)
+
+        cell.configure(
+            title: post.text,
+            author: post.authorName,
+            date: dateString,
+            postID: post.id,
+            isSaved: isSaved
+        )
+
+        cell.onToggleSave = { [weak self] postID, newStatus in
+            self?.onToggleSave?(postID, newStatus)
+        }
+
+        return cell
+    }
+
+    // MARK: - SELECT ROW → ENTER POST DETAIL
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        let post = profileScreen.posts[indexPath.row]
+        onSelectPost?(post)
+    }
+
+    // MARK: - DELETE MY POSTS (SWIPE)
+    func tableView(_ tableView: UITableView,
+                   trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath)
+        -> UISwipeActionsConfiguration?
+    {
+        let post = profileScreen.posts[indexPath.row]
+
+        guard post.authorId == currentUID else { return nil }
+
+        let deleteAction = UIContextualAction(style: .destructive, title: "Delete") {
+            [weak self] (_, _, completionHandler) in
+            self?.confirmDelete(post: post)
+            completionHandler(true)
+        }
+
+        return UISwipeActionsConfiguration(actions: [deleteAction])
     }
 }
