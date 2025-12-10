@@ -5,11 +5,14 @@
 //  Created by Weiqing Gao on 11/10/25.
 //
 
-
 import UIKit
 
+/// Registration screen layout.
+/// Includes: name, email, password, confirm password, and sign-up button.
 class RegisterView: UIView {
-    // MARK: - UI elements
+
+    // MARK: - UI Elements
+
     var labelName: UILabel!
     var textFieldName: UITextField!
     var labelEmail: UILabel!
@@ -19,11 +22,13 @@ class RegisterView: UIView {
     var labelRePassword: UILabel!
     var textFieldRePassword: UITextField!
     var buttonSignUp: UIButton!
-    
+
+    // MARK: - Init
+
     override init(frame: CGRect) {
         super.init(frame: frame)
-        self.backgroundColor = .white
-        
+        backgroundColor = .white
+
         setupLabelName()
         setupTextFieldName()
         setupLabelEmail()
@@ -33,19 +38,24 @@ class RegisterView: UIView {
         setupLabelRePassword()
         setupTextFieldRePassword()
         setupButtonSignUp()
-        
+
         initConstraints()
     }
-    
-    // MARK: - Name
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    // MARK: - UI Setup
+
     func setupLabelName() {
         labelName = UILabel()
         labelName.text = "Name"
         labelName.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
         labelName.translatesAutoresizingMaskIntoConstraints = false
-        self.addSubview(labelName)
+        addSubview(labelName)
     }
-    
+
     func setupTextFieldName() {
         textFieldName = UITextField()
         textFieldName.placeholder = "Enter your name"
@@ -53,18 +63,17 @@ class RegisterView: UIView {
         textFieldName.autocapitalizationType = .none
         textFieldName.autocorrectionType = .no
         textFieldName.translatesAutoresizingMaskIntoConstraints = false
-        self.addSubview(textFieldName)
+        addSubview(textFieldName)
     }
-    
-    // MARK: - Email
+
     func setupLabelEmail() {
         labelEmail = UILabel()
         labelEmail.text = "Email"
         labelEmail.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
         labelEmail.translatesAutoresizingMaskIntoConstraints = false
-        self.addSubview(labelEmail)
+        addSubview(labelEmail)
     }
-    
+
     func setupTextFieldEmail() {
         textFieldEmail = UITextField()
         textFieldEmail.placeholder = "Enter your email"
@@ -73,18 +82,17 @@ class RegisterView: UIView {
         textFieldEmail.autocapitalizationType = .none
         textFieldEmail.autocorrectionType = .no
         textFieldEmail.translatesAutoresizingMaskIntoConstraints = false
-        self.addSubview(textFieldEmail)
+        addSubview(textFieldEmail)
     }
-    
-    // MARK: - Password
+
     func setupLabelPassword() {
         labelPassword = UILabel()
         labelPassword.text = "Password"
         labelPassword.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
         labelPassword.translatesAutoresizingMaskIntoConstraints = false
-        self.addSubview(labelPassword)
+        addSubview(labelPassword)
     }
-    
+
     func setupTextFieldPassword() {
         textFieldPassword = UITextField()
         textFieldPassword.placeholder = "Enter your password"
@@ -93,18 +101,17 @@ class RegisterView: UIView {
         textFieldPassword.autocapitalizationType = .none
         textFieldPassword.autocorrectionType = .no
         textFieldPassword.translatesAutoresizingMaskIntoConstraints = false
-        self.addSubview(textFieldPassword)
+        addSubview(textFieldPassword)
     }
-    
-    // MARK: - Re-enter Password
+
     func setupLabelRePassword() {
         labelRePassword = UILabel()
         labelRePassword.text = "Re-enter Password"
         labelRePassword.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
         labelRePassword.translatesAutoresizingMaskIntoConstraints = false
-        self.addSubview(labelRePassword)
+        addSubview(labelRePassword)
     }
-    
+
     func setupTextFieldRePassword() {
         textFieldRePassword = UITextField()
         textFieldRePassword.placeholder = "Re-enter your password"
@@ -113,10 +120,9 @@ class RegisterView: UIView {
         textFieldRePassword.autocapitalizationType = .none
         textFieldRePassword.autocorrectionType = .no
         textFieldRePassword.translatesAutoresizingMaskIntoConstraints = false
-        self.addSubview(textFieldRePassword)
+        addSubview(textFieldRePassword)
     }
-    
-    // MARK: - Sign Up Button
+
     func setupButtonSignUp() {
         buttonSignUp = UIButton(type: .system)
         buttonSignUp.setTitle("Sign Up", for: .normal)
@@ -125,56 +131,54 @@ class RegisterView: UIView {
         buttonSignUp.tintColor = .white
         buttonSignUp.layer.cornerRadius = 8
         buttonSignUp.translatesAutoresizingMaskIntoConstraints = false
-        self.addSubview(buttonSignUp)
+        addSubview(buttonSignUp)
     }
-    
+
+    // MARK: - Constraints
+
     func initConstraints() {
         NSLayoutConstraint.activate([
             // Name
-            labelName.topAnchor.constraint(equalTo: self.safeAreaLayoutGuide.topAnchor, constant: 40),
-            labelName.leadingAnchor.constraint(equalTo: self.safeAreaLayoutGuide.leadingAnchor, constant: 20),
-            
+            labelName.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor, constant: 40),
+            labelName.leadingAnchor.constraint(equalTo: safeAreaLayoutGuide.leadingAnchor, constant: 20),
+
             textFieldName.topAnchor.constraint(equalTo: labelName.bottomAnchor, constant: 8),
             textFieldName.leadingAnchor.constraint(equalTo: labelName.leadingAnchor),
-            textFieldName.trailingAnchor.constraint(equalTo: self.safeAreaLayoutGuide.trailingAnchor, constant: -20),
+            textFieldName.trailingAnchor.constraint(equalTo: safeAreaLayoutGuide.trailingAnchor, constant: -20),
             textFieldName.heightAnchor.constraint(equalToConstant: 42),
-            
+
             // Email
             labelEmail.topAnchor.constraint(equalTo: textFieldName.bottomAnchor, constant: 20),
             labelEmail.leadingAnchor.constraint(equalTo: labelName.leadingAnchor),
-            
+
             textFieldEmail.topAnchor.constraint(equalTo: labelEmail.bottomAnchor, constant: 8),
             textFieldEmail.leadingAnchor.constraint(equalTo: textFieldName.leadingAnchor),
             textFieldEmail.trailingAnchor.constraint(equalTo: textFieldName.trailingAnchor),
             textFieldEmail.heightAnchor.constraint(equalToConstant: 42),
-            
+
             // Password
             labelPassword.topAnchor.constraint(equalTo: textFieldEmail.bottomAnchor, constant: 20),
             labelPassword.leadingAnchor.constraint(equalTo: labelName.leadingAnchor),
-            
+
             textFieldPassword.topAnchor.constraint(equalTo: labelPassword.bottomAnchor, constant: 8),
             textFieldPassword.leadingAnchor.constraint(equalTo: textFieldName.leadingAnchor),
             textFieldPassword.trailingAnchor.constraint(equalTo: textFieldName.trailingAnchor),
             textFieldPassword.heightAnchor.constraint(equalToConstant: 42),
-            
+
             // Re-enter Password
             labelRePassword.topAnchor.constraint(equalTo: textFieldPassword.bottomAnchor, constant: 20),
             labelRePassword.leadingAnchor.constraint(equalTo: labelName.leadingAnchor),
-            
+
             textFieldRePassword.topAnchor.constraint(equalTo: labelRePassword.bottomAnchor, constant: 8),
             textFieldRePassword.leadingAnchor.constraint(equalTo: textFieldName.leadingAnchor),
             textFieldRePassword.trailingAnchor.constraint(equalTo: textFieldName.trailingAnchor),
             textFieldRePassword.heightAnchor.constraint(equalToConstant: 42),
-            
+
             // Button
             buttonSignUp.topAnchor.constraint(equalTo: textFieldRePassword.bottomAnchor, constant: 40),
-            buttonSignUp.centerXAnchor.constraint(equalTo: self.centerXAnchor),
-            buttonSignUp.widthAnchor.constraint(equalTo: self.safeAreaLayoutGuide.widthAnchor, multiplier: 0.6),
+            buttonSignUp.centerXAnchor.constraint(equalTo: centerXAnchor),
+            buttonSignUp.widthAnchor.constraint(equalTo: safeAreaLayoutGuide.widthAnchor, multiplier: 0.6),
             buttonSignUp.heightAnchor.constraint(equalToConstant: 46)
         ])
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
     }
 }
