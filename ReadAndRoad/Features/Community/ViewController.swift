@@ -16,7 +16,6 @@ class ViewController: UIViewController {
 
     let communityScreen = CommunityView()
     let db = Firestore.firestore()
-    var savedPostIDs: Set<String> = []
     var posts: [Post] = []
     
     var listener: ListenerRegistration?
@@ -48,23 +47,25 @@ class ViewController: UIViewController {
             navBar.scrollEdgeAppearance = appearance
         }
         
-        if let uid = Auth.auth().currentUser?.uid {
-            db.collection("users").document(uid)
-                .addSnapshotListener { [weak self] snap, _ in
-                    guard let saved = snap?.data()?["savedPosts"] as? [String] else {
-                        self?.savedPostIDs = []
-                        return
-                    }
-                    self?.savedPostIDs = Set(saved)
-                    self?.communityScreen.tableViewPosts.reloadData()
-                }
+        // 启动 SavedPostManager（如果已经登录）
+        if Auth.auth().currentUser != nil {
+            SavedPostManager.shared.start()
         }
+
+        // 监听收藏变化通知
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(savedPostsUpdated),
+            name: .savedPostsUpdated,
+            object: nil
+        )
 
         observePosts()
     }
     
     deinit {
         listener?.remove()
+        NotificationCenter.default.removeObserver(self)
     }
 
     // MARK: - Firestore
@@ -82,22 +83,6 @@ class ViewController: UIViewController {
             }
     }
     
-    func updateSavedStatus(postID: String, isSaved: Bool) {
-        guard let uid = Auth.auth().currentUser?.uid else { return }
-
-        let userRef = db.collection("users").document(uid)
-
-        if isSaved {
-            userRef.updateData([
-                "savedPosts": FieldValue.arrayUnion([postID])
-            ])
-        } else {
-            userRef.updateData([
-                "savedPosts": FieldValue.arrayRemove([postID])
-            ])
-        }
-    }
-    
     func showLoginAlert() {
         let alert = UIAlertController(
             title: "Login Required",
@@ -111,6 +96,10 @@ class ViewController: UIViewController {
         }))
 
         present(alert, animated: true)
+    }
+    
+    @objc func savedPostsUpdated() {
+        communityScreen.tableViewPosts.reloadData()
     }
 
 }
@@ -143,7 +132,7 @@ extension ViewController: UITableViewDataSource, UITableViewDelegate {
             dateString = ""
         }
 
-        let isSaved = savedPostIDs.contains(post.id)
+        let isSaved = SavedPostManager.shared.isSaved(post.id)
 
         cell.configure(
             title: post.text,
@@ -161,7 +150,7 @@ extension ViewController: UITableViewDataSource, UITableViewDelegate {
                 return
             }
 
-            self.updateSavedStatus(postID: postID, isSaved: newStatus)
+            SavedPostManager.shared.setSaved(newStatus, for: postID, completion: nil)
         }
 
         return cell

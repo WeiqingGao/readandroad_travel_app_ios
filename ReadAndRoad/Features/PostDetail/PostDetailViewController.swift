@@ -25,6 +25,7 @@ class PostDetailViewController: UIViewController,
 
     init(post: Post) {
         self.post = post
+        self.isSavedByCurrentUser = SavedPostManager.shared.isSaved(post.id)
         super.init(nibName: nil, bundle: nil)
     }
     required init?(coder: NSCoder) { fatalError() }
@@ -37,6 +38,17 @@ class PostDetailViewController: UIViewController,
         super.viewDidLoad()
         title = "Post"
 
+        if Auth.auth().currentUser != nil {
+            SavedPostManager.shared.start()
+        }
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(savedPostsUpdated),
+            name: .savedPostsUpdated,
+            object: nil
+        )
+        
         mainView.tableView.dataSource = self
         mainView.tableView.delegate = self
         mainView.tableView.register(PostDetailHeaderCell.self, forCellReuseIdentifier: "PostHeader")
@@ -67,35 +79,28 @@ class PostDetailViewController: UIViewController,
     func checkIfSaved() {
         guard let uid = Auth.auth().currentUser?.uid else { return }
 
-        db.collection("users").document(uid).getDocument { snapshot, _ in
-            let saved = snapshot?.data()?["savedPosts"] as? [String] ?? []
-            self.isSavedByCurrentUser = saved.contains(self.post.id)
-            self.mainView.tableView.reloadData()
-        }
+        db.collection("users").document(uid)
+            .addSnapshotListener { [weak self] snapshot, _ in
+                guard let self = self else { return }
+                let saved = snapshot?.data()?["savedPosts"] as? [String] ?? []
+                self.isSavedByCurrentUser = saved.contains(self.post.id)
+                self.mainView.tableView.reloadData()
+            }
     }
 
     // MARK: - 收藏按钮逻辑
     func toggleSave() {
-        guard let uid = Auth.auth().currentUser?.uid else {
+        guard Auth.auth().currentUser != nil else {
             showLoginAlert()
             return
         }
 
-        let userRef = db.collection("users").document(uid)
-
-        if isSavedByCurrentUser {
-            userRef.updateData([
-                "savedPosts": FieldValue.arrayRemove([post.id])
-            ])
-            isSavedByCurrentUser = false
-        } else {
-            userRef.updateData([
-                "savedPosts": FieldValue.arrayUnion([post.id])
-            ])
-            isSavedByCurrentUser = true
+        let target = !isSavedByCurrentUser
+        SavedPostManager.shared.setSaved(target, for: post.id) { [weak self] _ in
+            // 乐观更新（其实监听器也会更新它）
+            self?.isSavedByCurrentUser = target
+            self?.mainView.tableView.reloadSections(IndexSet(integer: 0), with: .none)
         }
-
-        mainView.tableView.reloadData()
     }
 
     func showLoginAlert() {
@@ -139,6 +144,15 @@ class PostDetailViewController: UIViewController,
         // 清空
         mainView.commentTextField.text = ""
         mainView.endEditing(true)
+    }
+    
+    @objc func savedPostsUpdated() {
+        let newValue = SavedPostManager.shared.isSaved(post.id)
+        if newValue != isSavedByCurrentUser {
+            isSavedByCurrentUser = newValue
+            // 刷新 Section 0（header cell）
+            mainView.tableView.reloadSections(IndexSet(integer: 0), with: .none)
+        }
     }
 
     // MARK: - 评论附图

@@ -64,6 +64,13 @@ class ProfileViewController: UIViewController,
             name: .userSignedOut,
             object: nil)
 
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(savedPostsUpdated),
+            name: .savedPostsUpdated,
+            object: nil
+        )
+
         updateLoginState()
     }
 
@@ -80,10 +87,12 @@ class ProfileViewController: UIViewController,
             profileScreen.isLoggedIn = true
             loadUserInfo()
             startListeningMyPosts()
+            SavedPostManager.shared.start()
         } else {
             navigationItem.rightBarButtonItem = nil
             profileScreen.isLoggedIn = false
             profileScreen.posts = []
+            SavedPostManager.shared.stop()
         }
     }
 
@@ -126,29 +135,22 @@ class ProfileViewController: UIViewController,
 
     /// 实时监听 Saved Posts
     func startListeningSavedPosts() {
-        guard let uid = currentUID else { return }
+        loadSavedPostsOnce()
+    }
+    
+    func loadSavedPostsOnce() {
+        let ids = Array(SavedPostManager.shared.savedPostIDs)
+        if ids.isEmpty {
+            profileScreen.posts = []
+            return
+        }
 
-        savedPostsListener?.remove()
-
-        let userRef = db.collection("users").document(uid)
-
-        savedPostsListener =
-            userRef.addSnapshotListener { [weak self] snapshot, error in
-                guard let self = self,
-                      let data = snapshot?.data(),
-                      let saved = data["savedPosts"] as? [String],
-                      !saved.isEmpty else {
-                          self?.profileScreen.posts = []
-                          return
-                      }
-
-                self.db.collection("Posts")
-                    .whereField(FieldPath.documentID(), in: saved)
-                    .order(by: "createdAt", descending: true)
-                    .getDocuments { snap, _ in
-                        guard let docs = snap?.documents else { return }
-                        self.profileScreen.posts = docs.map { Post(document: $0) }
-                    }
+        db.collection("Posts")
+            .whereField(FieldPath.documentID(), in: ids)
+            .order(by: "createdAt", descending: true)
+            .getDocuments { [weak self] snap, _ in
+                guard let docs = snap?.documents else { return }
+                self?.profileScreen.posts = docs.map { Post(document: $0) }
             }
     }
 
@@ -232,13 +234,68 @@ class ProfileViewController: UIViewController,
             print("Sign out error:", error.localizedDescription)
         }
     }
+    
+    @objc func savedPostsUpdated() {
+        // 只有在 "Saved Posts" tab 下才刷新
+        if profileScreen.segmentedControl.selectedSegmentIndex == 1 {
+            loadSavedPostsOnce()
+        }
+    }
 
     @objc func userDidLogin() { updateLoginState() }
     @objc func userDidSignOut() { updateLoginState() }
+    
+    func confirmDelete(post: Post) {
+        let alert = UIAlertController(
+            title: "Delete Post?",
+            message: "This action cannot be undone.",
+            preferredStyle: .alert
+        )
+
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { _ in
+            self.deletePost(post)
+        }))
+
+        present(alert, animated: true)
+    }
+    
+    func deletePost(_ post: Post) {
+        let postRef = db.collection("Posts").document(post.id)
+
+        // 删除评论子集合
+        postRef.collection("comments").getDocuments { snap, _ in
+            snap?.documents.forEach { $0.reference.delete() }
+
+            // 删除帖子本体
+            postRef.delete()
+        }
+    }
 
     deinit {
         myPostsListener?.remove()
         savedPostsListener?.remove()
         NotificationCenter.default.removeObserver(self)
+    }
+}
+
+extension ProfileViewController: UITableViewDelegate {
+
+    // 允许滑动删除
+    func tableView(_ tableView: UITableView,
+                   trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath)
+        -> UISwipeActionsConfiguration? {
+
+        let post = profileScreen.posts[indexPath.row]
+
+        // 不是作者 → 不能删除
+        guard post.authorId == currentUID else { return nil }
+
+        let deleteAction = UIContextualAction(style: .destructive, title: "Delete") { _, _, done in
+            self.confirmDelete(post: post)
+            done(true)
+        }
+
+        return UISwipeActionsConfiguration(actions: [deleteAction])
     }
 }

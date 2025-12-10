@@ -199,12 +199,13 @@ class ProfileView: UIView, UITableViewDelegate, UITableViewDataSource {
         formatter.dateFormat = "yyyy-MM-dd HH:mm"
         let dateString = post.createdAt.map { formatter.string(from: $0) } ?? ""
         
+        let isSaved = SavedPostManager.shared.isSaved(post.id)
         cell.configure(
             title: post.text,
             author: post.authorName,
             date: dateString,
             postID: post.id,
-            isSaved: false   // Saved逻辑后续添加
+            isSaved: isSaved
         )
         
         return cell
