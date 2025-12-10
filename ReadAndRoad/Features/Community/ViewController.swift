@@ -16,6 +16,7 @@ class ViewController: UIViewController {
 
     let communityScreen = CommunityView()
     let db = Firestore.firestore()
+    var savedPostIDs: Set<String> = []
     var posts: [Post] = []
     
     var listener: ListenerRegistration?
@@ -46,6 +47,18 @@ class ViewController: UIViewController {
             navBar.compactAppearance = appearance
             navBar.scrollEdgeAppearance = appearance
         }
+        
+        if let uid = Auth.auth().currentUser?.uid {
+            db.collection("users").document(uid)
+                .addSnapshotListener { [weak self] snap, _ in
+                    guard let saved = snap?.data()?["savedPosts"] as? [String] else {
+                        self?.savedPostIDs = []
+                        return
+                    }
+                    self?.savedPostIDs = Set(saved)
+                    self?.communityScreen.tableViewPosts.reloadData()
+                }
+        }
 
         observePosts()
     }
@@ -68,6 +81,38 @@ class ViewController: UIViewController {
                 }
             }
     }
+    
+    func updateSavedStatus(postID: String, isSaved: Bool) {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+
+        let userRef = db.collection("users").document(uid)
+
+        if isSaved {
+            userRef.updateData([
+                "savedPosts": FieldValue.arrayUnion([postID])
+            ])
+        } else {
+            userRef.updateData([
+                "savedPosts": FieldValue.arrayRemove([postID])
+            ])
+        }
+    }
+    
+    func showLoginAlert() {
+        let alert = UIAlertController(
+            title: "Login Required",
+            message: "You must sign in to save posts.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Sign In", style: .default, handler: { _ in
+            let vc = SignInViewController()
+            self.navigationController?.pushViewController(vc, animated: true)
+        }))
+
+        present(alert, animated: true)
+    }
+
 }
 
 extension ViewController: UITableViewDataSource, UITableViewDelegate {
@@ -98,15 +143,26 @@ extension ViewController: UITableViewDataSource, UITableViewDelegate {
             dateString = ""
         }
 
-        // 先用 post.text 作为 title，post.authorName 作为 author，
-        // isSaved 先写死为 false（后面做收藏功能的时候再改）
+        let isSaved = savedPostIDs.contains(post.id)
+
         cell.configure(
             title: post.text,
             author: post.authorName,
             date: dateString,
             postID: post.id,
-            isSaved: false
+            isSaved: isSaved
         )
+        
+        cell.onToggleSave = { [weak self] postID, newStatus in
+            guard let self = self else { return }
+
+            if Auth.auth().currentUser == nil {
+                self.showLoginAlert()
+                return
+            }
+
+            self.updateSavedStatus(postID: postID, isSaved: newStatus)
+        }
 
         return cell
     }

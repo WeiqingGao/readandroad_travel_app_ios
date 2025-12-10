@@ -14,10 +14,13 @@ class CommunityPostCell: UITableViewCell {
     private let labelAuthor = UILabel()
     private let labelDate = UILabel()
     private let buttonStar = UIButton(type: .system)
+    
     var postID: String?
     var isSaved: Bool = false {
         didSet { updateStarAppearance() }
     }
+    // 回调：传递 postID 与新的 isSaved
+    var onToggleSave: ((String, Bool) -> Void)?
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -47,6 +50,7 @@ class CommunityPostCell: UITableViewCell {
         labelTitle.translatesAutoresizingMaskIntoConstraints = false
         labelAuthor.translatesAutoresizingMaskIntoConstraints = false
         labelDate.translatesAutoresizingMaskIntoConstraints = false
+        buttonStar.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
             labelTitle.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8),
@@ -59,7 +63,13 @@ class CommunityPostCell: UITableViewCell {
             
             labelDate.centerYAnchor.constraint(equalTo: labelAuthor.centerYAnchor),
             labelDate.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            labelDate.widthAnchor.constraint(equalToConstant: 80)
+            labelDate.widthAnchor.constraint(equalToConstant: 80),
+            
+            buttonStar.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            buttonStar.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8),
+            buttonStar.widthAnchor.constraint(equalToConstant: 24),
+            buttonStar.heightAnchor.constraint(equalToConstant: 24)
+
         ])
     }
     
@@ -78,6 +88,18 @@ class CommunityPostCell: UITableViewCell {
     }
     
     @objc private func didTapStar() {
+        guard let postID = postID else { return }
 
+        // 未登录交给控制器处理
+        if Auth.auth().currentUser == nil {
+            onToggleSave?(postID, isSaved)    // 不改变 isSaved，让 VC 决定是否弹窗
+            return
+        }
+
+        // 切换状态
+        isSaved.toggle()
+        updateStarAppearance()
+
+        onToggleSave?(postID, isSaved)
     }
 }
