@@ -57,6 +57,14 @@ class AuthService {
                     return
                 }
                 
+                let change = user.createProfileChangeRequest()
+                change.displayName = name
+                change.commitChanges { commitError in
+                    if let commitError = commitError {
+                        print("Failed to set displayName:", commitError.localizedDescription)
+                    }
+                }
+                
                 let uid = user.uid
                 print("User registered:", user.email ?? "")
                 

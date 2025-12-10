@@ -16,9 +16,9 @@ class ProfileView: UIView, UITableViewDelegate, UITableViewDataSource {
     // MARK: - 登录状态视图
     var imageViewAvatar: UIImageView!
     var textFieldNickname: UITextField!
+    var editNicknameButton: UIButton!
     var labelEmail: UILabel!
     var buttonChangePassword: UIButton!
-    var buttonSave: UIButton!
     var segmentedControl: UISegmentedControl!
     var tableViewPosts: UITableView!
     
@@ -84,10 +84,18 @@ class ProfileView: UIView, UITableViewDelegate, UITableViewDataSource {
         
         textFieldNickname = UITextField()
         textFieldNickname.placeholder = "Your Nickname"
-        textFieldNickname.borderStyle = .roundedRect
+        textFieldNickname.isUserInteractionEnabled = false
+        textFieldNickname.borderStyle = .none
+        textFieldNickname.backgroundColor = .clear
         textFieldNickname.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         textFieldNickname.translatesAutoresizingMaskIntoConstraints = false
         addSubview(textFieldNickname)
+        
+        editNicknameButton = UIButton(type: .system)
+        editNicknameButton.setImage(UIImage(systemName: "pencil"), for: .normal)
+        editNicknameButton.tintColor = .secondaryLabel
+        editNicknameButton.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(editNicknameButton)
         
         labelEmail = UILabel()
         labelEmail.textColor = .secondaryLabel
@@ -100,12 +108,6 @@ class ProfileView: UIView, UITableViewDelegate, UITableViewDataSource {
         buttonChangePassword.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .semibold)
         buttonChangePassword.translatesAutoresizingMaskIntoConstraints = false
         addSubview(buttonChangePassword)
-        
-        buttonSave = UIButton(type: .system)
-        buttonSave.setTitle("Save", for: .normal)
-        buttonSave.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .semibold)
-        buttonSave.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(buttonSave)
         
         segmentedControl = UISegmentedControl(items: ["My Posts", "Saved Posts"])
         segmentedControl.selectedSegmentIndex = 0
@@ -137,18 +139,19 @@ class ProfileView: UIView, UITableViewDelegate, UITableViewDataSource {
             
             textFieldNickname.topAnchor.constraint(equalTo: imageViewAvatar.topAnchor),
             textFieldNickname.leadingAnchor.constraint(equalTo: imageViewAvatar.trailingAnchor, constant: 20),
-            textFieldNickname.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -20),
+            
+            editNicknameButton.centerYAnchor.constraint(equalTo: textFieldNickname.centerYAnchor),
+            editNicknameButton.leadingAnchor.constraint(equalTo: textFieldNickname.trailingAnchor, constant: 8),
+            editNicknameButton.widthAnchor.constraint(equalToConstant: 24),
+            editNicknameButton.heightAnchor.constraint(equalToConstant: 24),
             
             labelEmail.topAnchor.constraint(equalTo: textFieldNickname.bottomAnchor, constant: 10),
             labelEmail.leadingAnchor.constraint(equalTo: textFieldNickname.leadingAnchor),
             
             buttonChangePassword.topAnchor.constraint(equalTo: labelEmail.bottomAnchor, constant: 10),
             buttonChangePassword.leadingAnchor.constraint(equalTo: textFieldNickname.leadingAnchor),
-            
-            buttonSave.topAnchor.constraint(equalTo: buttonChangePassword.bottomAnchor, constant: 10),
-            buttonSave.leadingAnchor.constraint(equalTo: textFieldNickname.leadingAnchor),
-            
-            segmentedControl.topAnchor.constraint(equalTo: imageViewAvatar.bottomAnchor, constant: 20),
+                        
+            segmentedControl.topAnchor.constraint(equalTo: buttonChangePassword.bottomAnchor, constant: 20),
             segmentedControl.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 40),
             segmentedControl.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -40),
             
@@ -168,7 +171,6 @@ class ProfileView: UIView, UITableViewDelegate, UITableViewDataSource {
         textFieldNickname.isHidden = !isLoggedIn
         labelEmail.isHidden = !isLoggedIn
         buttonChangePassword.isHidden = !isLoggedIn
-        buttonSave.isHidden = !isLoggedIn
         segmentedControl.isHidden = !isLoggedIn
         tableViewPosts.isHidden = !isLoggedIn
     }

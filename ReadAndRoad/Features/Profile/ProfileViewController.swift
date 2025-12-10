@@ -44,9 +44,13 @@ class ProfileViewController: UIViewController,
             for: .valueChanged
         )
 
-        profileScreen.buttonSave.addTarget(self,
-                                           action: #selector(didTapSave),
-                                           for: .touchUpInside)
+        profileScreen.editNicknameButton.addTarget(self,
+                                                   action: #selector(didTapEditNickname),
+                                                   for: .touchUpInside)
+        
+        profileScreen.textFieldNickname.delegate = self
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(backgroundTapped))
+        view.addGestureRecognizer(tapGesture)
 
         profileScreen.buttonChangePassword.addTarget(
             self,
@@ -83,6 +87,13 @@ class ProfileViewController: UIViewController,
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(savedPostsUpdated),
+            name: .savedPostsUpdated,
+            object: nil
+        )
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(onSavedPostsUpdated),
             name: .savedPostsUpdated,
             object: nil
         )
@@ -221,18 +232,43 @@ class ProfileViewController: UIViewController,
         }
     }
 
-    @objc func didTapSave() {
+    func saveNickname() {
         guard let uid = currentUID else { return }
-
         let newName = profileScreen.textFieldNickname.text ?? ""
 
+        // 1. 更新 Firebase Auth 的 displayName
         let change = Auth.auth().currentUser?.createProfileChangeRequest()
         change?.displayName = newName
-        change?.commitChanges { _ in
-            self.db.collection("users").document(uid).updateData([
-                "name": newName
-            ])
+        change?.commitChanges(completion: nil)
+
+        // 2. 更新 Firestore users/{uid}
+        db.collection("users").document(uid).updateData([
+            "name": newName
+        ])
+
+        // 3. 更新所有 Posts 中的 authorName
+        db.collection("Posts")
+            .whereField("authorId", isEqualTo: uid)
+            .getDocuments { snap, error in
+                snap?.documents.forEach { doc in
+                    doc.reference.updateData(["authorName": newName])
+                }
+            }
+
+        // 4. 更新所有 Comments 中的 authorName
+        db.collection("Posts").getDocuments { snap, error in
+            snap?.documents.forEach { postDoc in
+                postDoc.reference.collection("comments")
+                    .whereField("authorId", isEqualTo: uid)
+                    .getDocuments { commentSnap, _ in
+                        commentSnap?.documents.forEach { c in
+                            c.reference.updateData(["authorName": newName])
+                        }
+                    }
+            }
         }
+        
+        NotificationCenter.default.post(name: .savedPostsUpdated, object: nil)
     }
 
     @objc func didTapChangePassword() {
@@ -252,9 +288,26 @@ class ProfileViewController: UIViewController,
     }
     
     @objc func savedPostsUpdated() {
-        // 只有在 "Saved Posts" tab 下才刷新
-        if profileScreen.segmentedControl.selectedSegmentIndex == 1 {
-            loadSavedPostsOnce()
+        startListeningMyPosts()
+    }
+    
+    @objc func didTapEditNickname() {
+        let tf = profileScreen.textFieldNickname!
+        tf.isUserInteractionEnabled = true
+        tf.tintColor = .systemBlue   // 恢复光标颜色
+        tf.borderStyle = .roundedRect
+        tf.becomeFirstResponder()
+    }
+    
+    @objc func backgroundTapped() {
+        view.endEditing(true)  // 会触发 textFieldDidEndEditing
+    }
+
+    @objc func onSavedPostsUpdated() {
+        if profileScreen.segmentedControl.selectedSegmentIndex == 0 {
+            startListeningMyPosts()
+        } else {
+            startListeningSavedPosts()
         }
     }
 
@@ -327,5 +380,29 @@ extension ProfileViewController: UITableViewDelegate {
         }
 
         return UISwipeActionsConfiguration(actions: [deleteAction])
+    }
+}
+
+extension ProfileViewController: UITextFieldDelegate {
+    func textFieldDidBeginEditing(_ textField: UITextField) {
+        profileScreen.textFieldNickname.layer.borderWidth = 1
+        profileScreen.textFieldNickname.layer.borderColor = UIColor.systemBlue.cgColor
+    }
+
+    func textFieldDidEndEditing(_ textField: UITextField) {
+        saveNickname()
+        
+        let tf = profileScreen.textFieldNickname!
+        tf.isUserInteractionEnabled = false
+        tf.borderStyle = .none
+        tf.backgroundColor = .clear
+        tf.layer.borderWidth = 0
+
+        // 🔥 关键：禁用光标
+        tf.tintColor = .clear
+
+        // 🔥 关键：让文字紧贴左侧，和 label 更像
+        tf.leftView = nil
+        tf.rightView = nil
     }
 }
