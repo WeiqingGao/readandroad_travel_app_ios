@@ -11,7 +11,7 @@ import FirebaseFirestore
 struct Post {
     let id: String
     let authorId: String
-    let authorName: String
+    var authorName: String
     let text: String
     let photoURLs: [String]
     let commentsCount: Int

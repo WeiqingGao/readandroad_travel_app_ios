@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import FirebaseAuth
 
 extension ViewController {
 
@@ -17,10 +18,32 @@ extension ViewController {
             name: .savedPostsUpdated,
             object: nil
         )
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(onUserNicknameUpdated(_:)),
+            name: .userNicknameUpdated,
+            object: nil
+        )
+
     }
 
     /// Called when save/unsave a post.
     @objc func onSavedPostsUpdated() {
+        communityView.tableViewPosts.reloadData()
+    }
+    
+    @objc func onUserNicknameUpdated(_ notification: Notification) {
+        guard let newName = notification.userInfo?["newName"] as? String else { return }
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+
+        // Update all posts currently shown in community feed
+        for i in posts.indices {
+            if posts[i].authorId == uid {
+                posts[i].authorName = newName
+            }
+        }
+
         communityView.tableViewPosts.reloadData()
     }
     

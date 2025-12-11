@@ -16,4 +16,9 @@ extension Notification.Name {
     
     // post
     static let savedPostsUpdated = Notification.Name("savedPostsUpdated")
+    
+    static let authStateDidChange = Notification.Name("authStateDidChange")
+    
+    static let userNicknameUpdated = Notification.Name("userNicknameUpdated")
+
 }
