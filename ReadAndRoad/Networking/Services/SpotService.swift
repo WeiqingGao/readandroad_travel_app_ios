@@ -40,4 +40,18 @@ final class SpotService {
             ensureSpotExists(name: s.name, rating: s.rating)
         }
     }
+    
+    func searchSpots(prefix: String, completion: @escaping ([String]) -> Void) {
+
+        let query = db.collection("Spots")
+            .order(by: "name")
+            .start(at: [prefix])
+            .end(at: [prefix + "\u{f8ff}"]) // Firestore prefix search hack
+
+        query.getDocuments { snapshot, _ in
+            let names = snapshot?.documents.compactMap { $0.data()["name"] as? String } ?? []
+            completion(names)
+        }
+    }
+
 }

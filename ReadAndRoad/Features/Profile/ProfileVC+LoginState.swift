@@ -25,6 +25,13 @@ extension ProfileViewController {
         } else {
             navigationItem.rightBarButtonItem = nil
         }
+        
+        if !isLoggedIn {
+            profileView.buttonSignIn.addTarget(self,
+                                               action: #selector(onSignInTapped),
+                                               for: .touchUpInside)
+        }
+
     }
 
     /// Connect button actions (logout, edit profile, segment changed)
@@ -51,4 +58,10 @@ extension ProfileViewController {
         selectedSegmentIndex = profileView.segmentControl.selectedSegmentIndex
         profileView.tableViewPosts.reloadData()
     }
+    
+    @objc func onSignInTapped() {
+        let vc = SignInViewController()
+        navigationController?.pushViewController(vc, animated: true)
+    }
+
 }

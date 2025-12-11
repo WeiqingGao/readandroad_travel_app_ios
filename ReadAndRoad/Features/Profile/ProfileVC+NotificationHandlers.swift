@@ -32,17 +32,43 @@ extension ProfileViewController {
             name: .userNicknameUpdated,
             object: nil
         )
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(onPostCreated),
+            name: .postCreated,
+            object: nil
+        )
+
     }
 
     @objc func onSavedPostsUpdated() {
+        loadSavedPosts(reset: true)
+
         if selectedSegmentIndex == 1 {
-            loadSavedPosts(reset: true)
+            profileView.tableViewPosts.reloadData()
         }
     }
 
+
     @objc func onAuthStateChanged() {
         updateLoginStateUI()
+
+        if Auth.auth().currentUser != nil {
+            SavedPostStore.shared.start()
+            loadUserInfo()
+            loadMyPosts(reset: true)
+            loadSavedPosts(reset: true)
+        } else {
+            SavedPostStore.shared.stop()
+            myPosts.removeAll()
+            savedPosts.removeAll()
+            profileView.tableViewPosts.reloadData()
+            profileView.textFieldNickname.text = ""
+            profileView.labelEmail.text = ""
+        }
     }
+
     
     @objc func onUserNicknameUpdated(_ notification: Notification) {
         guard let newName = notification.userInfo?["newName"] as? String else { return }
@@ -64,5 +90,11 @@ extension ProfileViewController {
 
         profileView.tableViewPosts.reloadData()
     }
+    
+    @objc func onPostCreated() {
+        guard Auth.auth().currentUser != nil else { return }
+        loadMyPosts(reset: true)
+    }
+
 
 }

@@ -33,6 +33,13 @@ final class SavedPostStore {
         stop()
         currentUserId = uid
 
+        db.collection("users").document(uid).getDocument { [weak self] snapshot, _ in
+            guard let self = self else { return }
+            let arr = snapshot?.data()?["savedPosts"] as? [String] ?? []
+            self.savedPostIds = arr
+            NotificationCenter.default.post(name: .savedPostsUpdated, object: nil)
+        }
+        
         listener = db.collection("users").document(uid)
             .addSnapshotListener { [weak self] snapshot, _ in
                 guard let self = self else { return }

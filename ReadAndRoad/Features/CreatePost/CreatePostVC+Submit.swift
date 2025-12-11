@@ -42,6 +42,8 @@ extension CreatePostViewController {
 
             switch result {
             case .success:
+                self.resetForm()
+                
                 let alert = UIAlertController(
                     title: "Success",
                     message: "Your post has been published!",
@@ -49,7 +51,7 @@ extension CreatePostViewController {
                 )
 
                 alert.addAction(UIAlertAction(title: "OK", style: .default, handler: { _ in
-                    self.navigationController?.popViewController(animated: true)
+                    self.navigationController?.popToRootViewController(animated: true)
                 }))
 
                 self.present(alert, animated: true)
@@ -60,4 +62,15 @@ extension CreatePostViewController {
             }
         }
     }
+    
+    func resetForm() {
+        mainView.textViewContent.text = ""
+        mainView.textFieldSpot.text = ""
+        spots.removeAll()
+        photos.removeAll()
+
+        mainView.tableViewSpots.reloadData()
+        mainView.collectionViewPhotos.reloadData()
+    }
+
 }

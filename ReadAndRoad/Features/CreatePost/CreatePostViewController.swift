@@ -33,6 +33,8 @@ class CreatePostViewController: UIViewController {
     // MARK: - Firebase
     let db = Firestore.firestore()
     let storage = Storage.storage()
+    
+    var autocompleteResults: [String] = []
 
     // MARK: - Lifecycle
     override func loadView() {

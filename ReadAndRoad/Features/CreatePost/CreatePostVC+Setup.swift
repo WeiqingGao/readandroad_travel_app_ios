@@ -37,6 +37,28 @@ extension CreatePostViewController {
         mainView.buttonSubmit.addTarget(self,
                                         action: #selector(onSubmitTapped),
                                         for: .touchUpInside)
+        mainView.textFieldSpot.addTarget(self,
+                                         action: #selector(onSpotTextChanged),
+                                         for: .editingChanged)
     }
+    
+    @objc func onSpotTextChanged() {
+        guard let text = mainView.textFieldSpot.text,
+              !text.trimmingCharacters(in: .whitespaces).isEmpty else {
+            autocompleteResults = []
+            mainView.tableViewAutocomplete.isHidden = true
+            mainView.tableViewAutocomplete.reloadData()
+            return
+        }
+
+        SpotService.shared.searchSpots(prefix: text) { [weak self] names in
+            guard let self = self else { return }
+
+            self.autocompleteResults = names
+            self.mainView.tableViewAutocomplete.isHidden = names.isEmpty
+            self.mainView.tableViewAutocomplete.reloadData()
+        }
+    }
+
 }
 

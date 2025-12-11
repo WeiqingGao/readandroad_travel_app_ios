@@ -114,6 +114,7 @@ class AuthService {
             if let user = authResult?.user {
                 print("User logged in:", user.email ?? "")
                 NotificationCenter.default.post(name: .userLoggedIn, object: user.uid)
+                NotificationCenter.default.post(name: .authStateDidChange, object: user.uid)
             }
         }
     }

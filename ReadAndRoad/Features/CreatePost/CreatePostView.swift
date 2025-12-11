@@ -16,6 +16,11 @@ class CreatePostView: UIView {
     var labelSpot: UILabel!
     var textFieldSpot: UITextField!
     var buttonAddSpot: UIButton!
+    
+    /// Autocomplete table for spot name suggestions.
+    var tableViewAutocomplete: UITableView!
+    
+    /// List of spots with rating.
     var tableViewSpots: UITableView!
     
     var labelPhoto: UILabel!
@@ -32,6 +37,7 @@ class CreatePostView: UIView {
         
         setupTextViewContent()
         setupSpotSection()
+        setupSpotAutocompleteTable()
         setupSpotsTableView()
         setupPhotoSection()
         setupPhotosCollectionView()
@@ -77,6 +83,17 @@ class CreatePostView: UIView {
         buttonAddSpot.titleLabel?.font = .systemFont(ofSize: 14, weight: .semibold)
         buttonAddSpot.translatesAutoresizingMaskIntoConstraints = false
         addSubview(buttonAddSpot)
+    }
+    
+    /// Create table view for autocomplete suggestions.
+    private func setupSpotAutocompleteTable() {
+        tableViewAutocomplete = UITableView()
+        tableViewAutocomplete.isHidden = true
+        tableViewAutocomplete.layer.cornerRadius = 8
+        tableViewAutocomplete.layer.borderWidth = 1
+        tableViewAutocomplete.layer.borderColor = UIColor.systemGray4.cgColor
+        tableViewAutocomplete.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(tableViewAutocomplete)
     }
     
     private func setupSpotsTableView() {
@@ -134,22 +151,29 @@ class CreatePostView: UIView {
             textViewContent.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16),
             textViewContent.heightAnchor.constraint(equalToConstant: 140),
             
-            // Spot section
+            // Spot label
             labelSpot.topAnchor.constraint(equalTo: textViewContent.bottomAnchor, constant: 16),
             labelSpot.leadingAnchor.constraint(equalTo: textViewContent.leadingAnchor),
             
+            // Spot text field + Add button
             textFieldSpot.topAnchor.constraint(equalTo: labelSpot.bottomAnchor, constant: 8),
             textFieldSpot.leadingAnchor.constraint(equalTo: textViewContent.leadingAnchor),
             
             buttonAddSpot.centerYAnchor.constraint(equalTo: textFieldSpot.centerYAnchor),
-            buttonAddSpot.leadingAnchor.constraint(equalTo: textFieldSpot.trailingAnchor, constant: 8),
             buttonAddSpot.trailingAnchor.constraint(equalTo: textViewContent.trailingAnchor),
             buttonAddSpot.widthAnchor.constraint(equalToConstant: 70),
             
             textFieldSpot.trailingAnchor.constraint(equalTo: buttonAddSpot.leadingAnchor, constant: -8),
             textFieldSpot.heightAnchor.constraint(equalToConstant: 40),
             
-            tableViewSpots.topAnchor.constraint(equalTo: textFieldSpot.bottomAnchor, constant: 8),
+            // Autocomplete table directly under spot text field
+            tableViewAutocomplete.topAnchor.constraint(equalTo: textFieldSpot.bottomAnchor, constant: 4),
+            tableViewAutocomplete.leadingAnchor.constraint(equalTo: textFieldSpot.leadingAnchor),
+            tableViewAutocomplete.trailingAnchor.constraint(equalTo: textFieldSpot.trailingAnchor),
+            tableViewAutocomplete.heightAnchor.constraint(equalToConstant: 150),
+            
+            // Spots table under autocomplete
+            tableViewSpots.topAnchor.constraint(equalTo: tableViewAutocomplete.bottomAnchor, constant: 8),
             tableViewSpots.leadingAnchor.constraint(equalTo: textViewContent.leadingAnchor),
             tableViewSpots.trailingAnchor.constraint(equalTo: textViewContent.trailingAnchor),
             tableViewSpots.heightAnchor.constraint(equalToConstant: 150),
@@ -166,7 +190,7 @@ class CreatePostView: UIView {
             collectionViewPhotos.trailingAnchor.constraint(equalTo: textViewContent.trailingAnchor),
             collectionViewPhotos.heightAnchor.constraint(equalToConstant: 100),
             
-            // Submit
+            // Submit button
             buttonSubmit.topAnchor.constraint(equalTo: collectionViewPhotos.bottomAnchor, constant: 24),
             buttonSubmit.centerXAnchor.constraint(equalTo: centerXAnchor),
             buttonSubmit.widthAnchor.constraint(equalTo: safeAreaLayoutGuide.widthAnchor, multiplier: 0.6),
