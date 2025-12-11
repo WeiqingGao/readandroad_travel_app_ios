@@ -56,7 +56,7 @@ extension ProfileViewController {
 
         var query = Firestore.firestore()
             .collection("Posts")
-            .whereField("authorID", isEqualTo: uid)
+            .whereField("authorId", isEqualTo: uid)
             .order(by: "createdAt", descending: true)
             .limit(to: Self.pageSize)
 
@@ -94,7 +94,7 @@ extension ProfileViewController {
         guard !isLoadingSavedPosts else { return }
         isLoadingSavedPosts = true
 
-        let allIDs = Array(SavedPostStore.shared.savedPostIDs)
+        let allIDs = Array(SavedPostStore.shared.savedPostIds)
 
         if reset {
             savedPosts.removeAll()

@@ -6,7 +6,6 @@
 //
 
 import UIKit
-import SDWebImage
 
 class CommentCell: UITableViewCell {
 
@@ -17,11 +16,17 @@ class CommentCell: UITableViewCell {
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
-
         selectionStyle = .none
+        setupViews()
+        setupConstraints()
+    }
 
-        authorLabel.font = .boldSystemFont(ofSize: 15)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 
+    private func setupViews() {
+        authorLabel.font = .systemFont(ofSize: 14, weight: .semibold)
         dateLabel.font = .systemFont(ofSize: 12)
         dateLabel.textColor = .secondaryLabel
 
@@ -33,41 +38,38 @@ class CommentCell: UITableViewCell {
         commentImageView.layer.cornerRadius = 8
         commentImageView.translatesAutoresizingMaskIntoConstraints = false
 
-        [authorLabel, dateLabel, commentLabel, commentImageView].forEach {
-            $0.translatesAutoresizingMaskIntoConstraints = false
-            contentView.addSubview($0)
-        }
+        authorLabel.translatesAutoresizingMaskIntoConstraints = false
+        dateLabel.translatesAutoresizingMaskIntoConstraints = false
+        commentLabel.translatesAutoresizingMaskIntoConstraints = false
 
-        setupConstraints()
+        contentView.addSubview(authorLabel)
+        contentView.addSubview(dateLabel)
+        contentView.addSubview(commentLabel)
+        contentView.addSubview(commentImageView)
     }
 
-    required init?(coder: NSCoder) { fatalError() }
-
-    func setupConstraints() {
-
+    private func setupConstraints() {
         NSLayoutConstraint.activate([
-
-            authorLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 12),
+            authorLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8),
             authorLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
 
-            dateLabel.topAnchor.constraint(equalTo: authorLabel.bottomAnchor, constant: 2),
-            dateLabel.leadingAnchor.constraint(equalTo: authorLabel.leadingAnchor),
+            dateLabel.centerYAnchor.constraint(equalTo: authorLabel.centerYAnchor),
+            dateLabel.leadingAnchor.constraint(equalTo: authorLabel.trailingAnchor, constant: 8),
+            dateLabel.trailingAnchor.constraint(lessThanOrEqualTo: contentView.trailingAnchor, constant: -16),
 
-            commentLabel.topAnchor.constraint(equalTo: dateLabel.bottomAnchor, constant: 6),
+            commentLabel.topAnchor.constraint(equalTo: authorLabel.bottomAnchor, constant: 4),
             commentLabel.leadingAnchor.constraint(equalTo: authorLabel.leadingAnchor),
             commentLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
 
-            commentImageView.topAnchor.constraint(equalTo: commentLabel.bottomAnchor, constant: 8),
-            commentImageView.leadingAnchor.constraint(equalTo: commentLabel.leadingAnchor),
-            commentImageView.widthAnchor.constraint(equalToConstant: 200),
-            commentImageView.heightAnchor.constraint(equalToConstant: 200),
-
-            contentView.bottomAnchor.constraint(
-                greaterThanOrEqualTo: commentImageView.bottomAnchor,
-                constant: 12
-            )
+            commentImageView.topAnchor.constraint(equalTo: commentLabel.bottomAnchor, constant: 6),
+            commentImageView.leadingAnchor.constraint(equalTo: authorLabel.leadingAnchor),
+            commentImageView.trailingAnchor.constraint(lessThanOrEqualTo: contentView.trailingAnchor, constant: -16),
+            commentImageView.heightAnchor.constraint(equalToConstant: 180),
+            commentImageView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8)
         ])
     }
+
+    // MARK: - Configure
 
     func configure(comment: Comment) {
 
@@ -85,7 +87,7 @@ class CommentCell: UITableViewCell {
 
         if let url = comment.photoURL {
             commentImageView.isHidden = false
-            commentImageView.sd_setImage(with: URL(string: url))
+            commentImageView.setRemoteImage(url)
         } else {
             commentImageView.isHidden = true
         }

@@ -11,7 +11,7 @@ import FirebaseFirestore
 struct Comment {
     let id: String
     let authorId: String
-    let authorName: String
+    var authorName: String
     let text: String
     let photoURL: String?
     let createdAt: Date?

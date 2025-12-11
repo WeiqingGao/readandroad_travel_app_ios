@@ -32,6 +32,9 @@ extension ProfileViewController {
         profileView.segmentControl.addTarget(self,
                                              action: #selector(onSegmentChanged),
                                              for: .valueChanged)
+        profileView.buttonEditNickname.addTarget(self,
+                                                 action: #selector(onEditNicknameTapped),
+                                                 for: .touchUpInside)
     }
 
     @objc func onLogoutTapped() {

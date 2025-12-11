@@ -9,85 +9,101 @@ import UIKit
 
 class PostDetailView: UIView {
 
-    // 整个帖子 + 评论都放在 tableView 中
-    let tableView: UITableView = {
-        let tv = UITableView()
-        tv.separatorStyle = .none
-        tv.translatesAutoresizingMaskIntoConstraints = false
-        return tv
-    }()
+    // MARK: - Public UI Components
 
-    // 底部评论输入栏
-    let commentInputView: UIView = {
-        let v = UIView()
-        v.backgroundColor = .secondarySystemBackground
-        v.translatesAutoresizingMaskIntoConstraints = false
-        return v
-    }()
+    let tableView = UITableView()
+    let commentInputView = UIView()
+    let commentTextField = UITextField()
+    let addImageButton = UIButton(type: .system)
+    let sendButton = UIButton(type: .system)
 
-    let commentTextField: UITextField = {
-        let tf = UITextField()
-        tf.placeholder = "Write a comment..."
-        tf.borderStyle = .roundedRect
-        tf.translatesAutoresizingMaskIntoConstraints = false
-        return tf
-    }()
-
-    let addImageButton: UIButton = {
-        let btn = UIButton(type: .system)
-        btn.setImage(UIImage(systemName: "photo"), for: .normal)
-        btn.tintColor = .label
-        btn.translatesAutoresizingMaskIntoConstraints = false
-        return btn
-    }()
-
-    let sendButton: UIButton = {
-        let btn = UIButton(type: .system)
-        btn.setTitle("Send", for: .normal)
-        btn.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
-        btn.translatesAutoresizingMaskIntoConstraints = false
-        return btn
-    }()
+    // MARK: - Init
 
     override init(frame: CGRect) {
         super.init(frame: frame)
         backgroundColor = .systemBackground
 
-        addSubview(tableView)
-        addSubview(commentInputView)
+        setupTableView()
+        setupCommentInputView()
+        setupAddImageButton()
+        setupSendButton()
+        setupCommentTextField()
 
-        commentInputView.addSubview(commentTextField)
-        commentInputView.addSubview(addImageButton)
-        commentInputView.addSubview(sendButton)
-
-        setupConstraints()
+        layoutUI()
     }
 
-    required init?(coder: NSCoder) { fatalError() }
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 
-    func setupConstraints() {
+
+    // MARK: - Setup Methods
+
+    private func setupTableView() {
+        tableView.separatorStyle = .none
+        tableView.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(tableView)
+    }
+
+    private func setupCommentInputView() {
+        commentInputView.backgroundColor = .secondarySystemBackground
+        commentInputView.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(commentInputView)
+    }
+
+    private func setupAddImageButton() {
+        let img = UIImage(systemName: "photo")
+        addImageButton.setImage(img, for: .normal)
+        addImageButton.tintColor = .label
+        addImageButton.translatesAutoresizingMaskIntoConstraints = false
+        commentInputView.addSubview(addImageButton)
+    }
+
+    private func setupSendButton() {
+        sendButton.setTitle("Send", for: .normal)
+        sendButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
+        sendButton.translatesAutoresizingMaskIntoConstraints = false
+        commentInputView.addSubview(sendButton)
+    }
+
+    private func setupCommentTextField() {
+        commentTextField.placeholder = "Write a comment..."
+        commentTextField.borderStyle = .roundedRect
+        commentTextField.translatesAutoresizingMaskIntoConstraints = false
+        commentInputView.addSubview(commentTextField)
+    }
+
+
+    // MARK: - Layout Constraints
+
+    private func layoutUI() {
 
         NSLayoutConstraint.activate([
 
+            // Table
             tableView.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor),
             tableView.leadingAnchor.constraint(equalTo: leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: trailingAnchor),
             tableView.bottomAnchor.constraint(equalTo: commentInputView.topAnchor),
 
+            // Input Bar
             commentInputView.leadingAnchor.constraint(equalTo: leadingAnchor),
             commentInputView.trailingAnchor.constraint(equalTo: trailingAnchor),
             commentInputView.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor),
             commentInputView.heightAnchor.constraint(equalToConstant: 60),
 
+            // Add Image Button
             addImageButton.leadingAnchor.constraint(equalTo: commentInputView.leadingAnchor, constant: 12),
             addImageButton.centerYAnchor.constraint(equalTo: commentInputView.centerYAnchor),
             addImageButton.widthAnchor.constraint(equalToConstant: 28),
             addImageButton.heightAnchor.constraint(equalToConstant: 28),
 
+            // Send Button
             sendButton.trailingAnchor.constraint(equalTo: commentInputView.trailingAnchor, constant: -12),
             sendButton.centerYAnchor.constraint(equalTo: commentInputView.centerYAnchor),
             sendButton.widthAnchor.constraint(equalToConstant: 50),
 
+            // Comment TextField
             commentTextField.leadingAnchor.constraint(equalTo: addImageButton.trailingAnchor, constant: 12),
             commentTextField.trailingAnchor.constraint(equalTo: sendButton.leadingAnchor, constant: -12),
             commentTextField.centerYAnchor.constraint(equalTo: commentInputView.centerYAnchor),

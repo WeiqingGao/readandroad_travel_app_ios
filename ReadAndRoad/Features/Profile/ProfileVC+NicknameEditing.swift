@@ -17,6 +17,17 @@ extension ProfileViewController: UITextFieldDelegate {
 
     func textFieldDidEndEditing(_ textField: UITextField) {
         saveNickname()
+        profileView.textFieldNickname.isUserInteractionEnabled = false
+    }
+    
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        textField.resignFirstResponder()
+        return true
+    }
+    
+    @objc func onEditNicknameTapped() {
+        profileView.textFieldNickname.isUserInteractionEnabled = true
+        profileView.textFieldNickname.becomeFirstResponder()
     }
 
     func saveNickname() {

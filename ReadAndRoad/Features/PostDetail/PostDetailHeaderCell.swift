@@ -6,50 +6,29 @@
 //
 
 import UIKit
-import SDWebImage   // 推荐使用 SDWebImage 加载图片（非常常用）
 
 class PostDetailHeaderCell: UITableViewCell {
 
     // MARK: - UI Components
+
     let authorLabel = UILabel()
     let dateLabel = UILabel()
     let postTextLabel = UILabel()
-    let saveButton = UIButton(type: .system)
 
     let imagesScrollView = UIScrollView()
     let imagesStackView = UIStackView()
 
-    // 回调：收藏按钮点击
+    let saveButton = UIButton(type: .system)
+
+    // Callback for save button
     var onSaveTapped: (() -> Void)?
+
+    // MARK: - Init
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
-
         selectionStyle = .none
-
-        authorLabel.font = .boldSystemFont(ofSize: 16)
-        dateLabel.font = .systemFont(ofSize: 13)
-        dateLabel.textColor = .secondaryLabel
-
-        postTextLabel.font = .systemFont(ofSize: 16)
-        postTextLabel.numberOfLines = 0
-
-        saveButton.tintColor = .systemYellow
-        saveButton.addTarget(self, action: #selector(savePressed), for: .touchUpInside)
-
-        imagesScrollView.showsHorizontalScrollIndicator = false
-        imagesStackView.axis = .horizontal
-        imagesStackView.spacing = 10
-
-        imagesScrollView.addSubview(imagesStackView)
-
-        [authorLabel, dateLabel, postTextLabel, saveButton, imagesScrollView].forEach {
-            $0.translatesAutoresizingMaskIntoConstraints = false
-            contentView.addSubview($0)
-        }
-
-        imagesStackView.translatesAutoresizingMaskIntoConstraints = false
-
+        setupViews()
         setupConstraints()
     }
 
@@ -57,42 +36,78 @@ class PostDetailHeaderCell: UITableViewCell {
         fatalError("init(coder:) has not been implemented")
     }
 
-    // MARK: - Constraints
-    private func setupConstraints() {
+    // MARK: - Setup
 
+    private func setupViews() {
+        authorLabel.font = .systemFont(ofSize: 16, weight: .semibold)
+        authorLabel.textColor = .label
+
+        dateLabel.font = .systemFont(ofSize: 13)
+        dateLabel.textColor = .secondaryLabel
+
+        postTextLabel.font = .systemFont(ofSize: 15)
+        postTextLabel.numberOfLines = 0
+
+        imagesScrollView.translatesAutoresizingMaskIntoConstraints = false
+        imagesScrollView.showsHorizontalScrollIndicator = false
+
+        imagesStackView.axis = .horizontal
+        imagesStackView.alignment = .fill
+        imagesStackView.distribution = .fillEqually
+        imagesStackView.spacing = 8
+        imagesStackView.translatesAutoresizingMaskIntoConstraints = false
+
+        imagesScrollView.addSubview(imagesStackView)
+
+        saveButton.tintColor = .systemYellow
+        saveButton.addTarget(self, action: #selector(savePressed), for: .touchUpInside)
+
+        authorLabel.translatesAutoresizingMaskIntoConstraints = false
+        dateLabel.translatesAutoresizingMaskIntoConstraints = false
+        postTextLabel.translatesAutoresizingMaskIntoConstraints = false
+        saveButton.translatesAutoresizingMaskIntoConstraints = false
+
+        contentView.addSubview(authorLabel)
+        contentView.addSubview(dateLabel)
+        contentView.addSubview(postTextLabel)
+        contentView.addSubview(imagesScrollView)
+        contentView.addSubview(saveButton)
+    }
+
+    private func setupConstraints() {
         NSLayoutConstraint.activate([
 
-            authorLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 16),
+            authorLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 12),
             authorLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
 
-            saveButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
             saveButton.centerYAnchor.constraint(equalTo: authorLabel.centerYAnchor),
-            saveButton.widthAnchor.constraint(equalToConstant: 32),
-            saveButton.heightAnchor.constraint(equalToConstant: 32),
+            saveButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            saveButton.widthAnchor.constraint(equalToConstant: 30),
+            saveButton.heightAnchor.constraint(equalToConstant: 30),
 
             dateLabel.topAnchor.constraint(equalTo: authorLabel.bottomAnchor, constant: 4),
             dateLabel.leadingAnchor.constraint(equalTo: authorLabel.leadingAnchor),
 
-            postTextLabel.topAnchor.constraint(equalTo: dateLabel.bottomAnchor, constant: 12),
+            postTextLabel.topAnchor.constraint(equalTo: dateLabel.bottomAnchor, constant: 8),
             postTextLabel.leadingAnchor.constraint(equalTo: authorLabel.leadingAnchor),
             postTextLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
 
-            imagesScrollView.topAnchor.constraint(equalTo: postTextLabel.bottomAnchor, constant: 12),
-            imagesScrollView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-            imagesScrollView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-            imagesScrollView.heightAnchor.constraint(equalToConstant: 250),
+            imagesScrollView.topAnchor.constraint(equalTo: postTextLabel.bottomAnchor, constant: 8),
+            imagesScrollView.leadingAnchor.constraint(equalTo: authorLabel.leadingAnchor),
+            imagesScrollView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            imagesScrollView.heightAnchor.constraint(equalToConstant: 220),
+            imagesScrollView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -12),
 
             imagesStackView.topAnchor.constraint(equalTo: imagesScrollView.topAnchor),
-            imagesStackView.leadingAnchor.constraint(equalTo: imagesScrollView.leadingAnchor, constant: 16),
-            imagesStackView.trailingAnchor.constraint(equalTo: imagesScrollView.trailingAnchor),
             imagesStackView.bottomAnchor.constraint(equalTo: imagesScrollView.bottomAnchor),
-            imagesStackView.heightAnchor.constraint(equalTo: imagesScrollView.heightAnchor),
-
-            contentView.bottomAnchor.constraint(greaterThanOrEqualTo: imagesScrollView.bottomAnchor, constant: 20)
+            imagesStackView.leadingAnchor.constraint(equalTo: imagesScrollView.leadingAnchor),
+            imagesStackView.trailingAnchor.constraint(equalTo: imagesScrollView.trailingAnchor),
+            imagesStackView.heightAnchor.constraint(equalTo: imagesScrollView.heightAnchor)
         ])
     }
 
     // MARK: - Configure
+
     func configure(post: Post, isSaved: Bool) {
 
         authorLabel.text = post.authorName
@@ -107,11 +122,10 @@ class PostDetailHeaderCell: UITableViewCell {
 
         postTextLabel.text = post.text
 
-        // 收藏按钮
         let icon = isSaved ? "star.fill" : "star"
         saveButton.setImage(UIImage(systemName: icon), for: .normal)
 
-        // 图片加载
+        // Images
         imagesStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
 
         for url in post.photoURLs {
@@ -119,16 +133,20 @@ class PostDetailHeaderCell: UITableViewCell {
             imgView.contentMode = .scaleAspectFill
             imgView.clipsToBounds = true
             imgView.layer.cornerRadius = 10
-            imgView.sd_setImage(with: URL(string: url))
-
+            imgView.translatesAutoresizingMaskIntoConstraints = false
             imgView.widthAnchor.constraint(equalToConstant: 200).isActive = true
-            imgView.heightAnchor.constraint(equalToConstant: 250).isActive = true
+            imgView.heightAnchor.constraint(equalToConstant: 220).isActive = true
+
+            imgView.setRemoteImage(url) // 👈 使用我们自己的扩展
 
             imagesStackView.addArrangedSubview(imgView)
         }
     }
 
-    @objc func savePressed() {
+    // MARK: - Actions
+
+    @objc private func savePressed() {
         onSaveTapped?()
     }
 }
+

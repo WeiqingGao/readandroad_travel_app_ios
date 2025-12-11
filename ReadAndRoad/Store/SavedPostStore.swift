@@ -8,17 +8,18 @@
 import FirebaseAuth
 import FirebaseFirestore
 
-/// Holds the local cache of saved post IDs and listens for Firestore updates.
+/// Holds the local cache of saved post Ids and listens for Firestore updates.
 final class SavedPostStore {
 
     static let shared = SavedPostStore()
-    private init() {}
 
     private let db = Firestore.firestore()
     private var listener: ListenerRegistration?
 
-    private(set) var savedPostIDs: Set<String> = []
-    private(set) var currentUserID: String?
+    private(set) var savedPostIds: [String] = []
+    private(set) var currentUserId: String?
+    
+    private init() {}
 
     /// Begin listening for saved posts of current user.
     func start() {
@@ -27,21 +28,21 @@ final class SavedPostStore {
             return
         }
 
-        if uid == currentUserID, listener != nil { return }
+        if uid == currentUserId, listener != nil { return }
 
         stop()
-        currentUserID = uid
+        currentUserId = uid
 
         listener = db.collection("users").document(uid)
             .addSnapshotListener { [weak self] snapshot, _ in
-
                 guard let self = self else { return }
 
-                let arr = snapshot?.data()?["savedPosts"] as? [String] ?? []
-                let newSet = Set(arr)
+                let newArr = snapshot?.data()?["savedPosts"] as? [String] ?? []
+                let changed = (newArr != self.savedPostIds)
 
-                if newSet != self.savedPostIDs {
-                    self.savedPostIDs = newSet
+                self.savedPostIds = newArr
+
+                if changed {
                     NotificationCenter.default.post(name: .savedPostsUpdated, object: nil)
                 }
             }
@@ -51,12 +52,12 @@ final class SavedPostStore {
     func stop() {
         listener?.remove()
         listener = nil
-        savedPostIDs = []
-        currentUserID = nil
+        savedPostIds = []
+        currentUserId = nil
     }
 
-    /// Check if a postID is saved.
+    /// Check if a postId is saved.
     func isSaved(_ id: String) -> Bool {
-        return savedPostIDs.contains(id)
+        return savedPostIds.contains(id)
     }
 }

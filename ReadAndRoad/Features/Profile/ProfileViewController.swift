@@ -29,9 +29,10 @@ class ProfileViewController: UIViewController {
         setupTableView()
         setupTargets()
         setupObservers()
+        setupNicknameEditing()
         updateLoginStateUI()
 
-        SavedPostStore.shared.start()   // NEW
+        SavedPostStore.shared.start()
         loadMyPosts()
         loadSavedPosts()
         loadUserInfo()

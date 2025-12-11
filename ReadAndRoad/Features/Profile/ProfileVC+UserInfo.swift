@@ -22,7 +22,9 @@ extension ProfileViewController {
             guard let data = snapshot?.data(), let self = self else { return }
 
             let name = data["name"] as? String ?? "Unknown"
+            let email = data["email"] as? String ?? Auth.auth().currentUser?.email ?? ""
             self.profileView.textFieldNickname.text = name
+            self.profileView.labelEmail.text = email
         }
     }
 }
