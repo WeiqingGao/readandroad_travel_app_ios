@@ -23,4 +23,15 @@ extension ViewController {
     @objc func onSavedPostsUpdated() {
         communityView.tableViewPosts.reloadData()
     }
+    
+    /// Start SavedPostStore + Firestore listeners
+    func startListening() {
+
+        SavedPostStore.shared.start()
+
+        CommunityService.shared.observeAllPosts { [weak self] posts in
+            self?.posts = posts
+            self?.communityView.tableViewPosts.reloadData()
+        }
+    }
 }

@@ -38,7 +38,7 @@ extension ViewController: UITableViewDelegate, UITableViewDataSource {
             author: post.authorName,
             date: formattedDate(post.createdAt),
             postID: post.id,
-            isSaved: SavedPostManager.shared.isSaved(post.id)
+            isSaved: SavedPostStore.shared.isSaved(post.id)
         )
 
         cell.onToggleSave = { [weak self] postID, newStatus in

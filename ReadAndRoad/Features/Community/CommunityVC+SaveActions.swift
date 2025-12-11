@@ -10,7 +10,6 @@ import FirebaseAuth
 
 extension ViewController {
 
-    /// Handles user tapping the save/star icon on a post.
     func handleSaveToggle(postID: String, newStatus: Bool) {
 
         guard Auth.auth().currentUser != nil else {
@@ -18,10 +17,9 @@ extension ViewController {
             return
         }
 
-        SavedPostManager.shared.setSaved(newStatus, for: postID)
+        SavedPostService.shared.setSaved(newStatus, postID: postID)
     }
 
-    /// Shown when user tries to save a post while not logged in.
     func presentLoginAlert() {
         let alert = UIAlertController(
             title: "Sign In Required",
